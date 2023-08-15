@@ -66,8 +66,6 @@ ModelContainer::ModelContainer(
   int driver_version;
   DEVICE_CHECK(GetDriverVersion(&driver_version));
   DEVICE_CHECK(GetRuntimeVersion(&runtime_version));
-  LOG(INFO) << "Device Runtime Version: " << runtime_version
-            << "; Driver Version: " << driver_version;
 
   int dev_id;
   DevicePropertyType prop;
@@ -75,16 +73,7 @@ ModelContainer::ModelContainer(
   DEVICE_CHECK(GetDeviceProperties(&prop, dev_id));
 
   bool useDebugLogging = false;
-  if (auto var = std::getenv("LOGLEVEL")) {
-    if (var[0] == 'd' || var[0] == 'D') {
-      useDebugLogging = true;
-    }
-  }
-  LOG(INFO)
-      << (useDebugLogging ? PrintDebugDeviceProperties(prop)
-                          : PrintInfoDeviceProperties(prop));
 
-  LOG(INFO) << "Init AITemplate Runtime with " << num_models << " concurrency";
   models_.reserve(num_models);
   available_models_.reserve(num_models);
 

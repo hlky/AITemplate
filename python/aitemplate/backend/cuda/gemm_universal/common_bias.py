@@ -35,6 +35,7 @@ SRC_TEMPLATE = jinja2.Template(
 #include <random>
 #include <vector>
 #include <iostream>
+#include "short_file.h"
 #include <cuda_bf16.h>
 
 #include "cutlass/cutlass.h"
@@ -60,7 +61,7 @@ using bfloat16 = nv_bfloat16;
   {                                                                                   \\
     cutlass::Status error = status;                                                   \\
     if (error != cutlass::Status::kSuccess) {                                         \\
-      auto msg = std::string("[") + __FILE__ + "] Got cutlass error: " +              \\
+      auto msg = std::string("[") + __SHORT_FILE__ + "] Got cutlass error: " +              \\
           cutlassGetStatusString(error) + " at: " + std::to_string(__LINE__);         \\
       std::cerr << msg << std::endl;                                                  \\
       throw std::runtime_error(msg);                                                  \\

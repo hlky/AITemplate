@@ -23,6 +23,7 @@ MODEL_TEMPLATE = jinja2.Template(
 {% if debug_header %}
 #include "debug_utility.h"
 {% endif %}
+#include "short_file.h"
 #include "logging.h"
 #include "device_functions-generated.h"
 #include "model_interface.h"
@@ -140,7 +141,7 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
         {% endif %}
   {% for func in function_seq %}
   {{ func }}
-      DeviceCheckLastError(__FILE__, __LINE__);
+      DeviceCheckLastError(__SHORT_FILE__, __LINE__);
   {% endfor %}
     }
 {% endif %}
@@ -162,7 +163,7 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
 
             StreamType& stream = baseStream;
             {{ funcs[0] }}
-            DeviceCheckLastError(__FILE__, __LINE__);
+            DeviceCheckLastError(__SHORT_FILE__, __LINE__);
           }
         {% else %}
           // do parallel stream processing here
@@ -188,7 +189,7 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
 
                   StreamType& stream = baseStream;
                   {{ func }}
-                  DeviceCheckLastError(__FILE__, __LINE__);
+                  DeviceCheckLastError(__SHORT_FILE__, __LINE__);
                 }
               {% else %}
                 {
@@ -197,7 +198,7 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
 
                   StreamType& stream = sub_streams[{{ ((loop.index - 1) % (n_additional_streams + 1)) - 1}}];
                   {{ func }}
-                  DeviceCheckLastError(__FILE__, __LINE__);
+                  DeviceCheckLastError(__SHORT_FILE__, __LINE__);
                 }
               {% endif %}
             {% endfor %}
@@ -219,7 +220,7 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
         StreamType& stream = baseStream;
         {% for func in par_check_function_seq %}
           {{ func }}
-          DeviceCheckLastError(__FILE__, __LINE__);
+          DeviceCheckLastError(__SHORT_FILE__, __LINE__);
         {% endfor %}
       }
     }
@@ -256,7 +257,7 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
           EventRecord(call_start, stream);
             {{ func }}
           EventRecord(call_end, stream);
-          DeviceCheckLastError(__FILE__, __LINE__);
+          DeviceCheckLastError(__SHORT_FILE__, __LINE__);
         }
         EventSynchronize(std::get<1>(call_events.back()));
         float milliseconds = 0.0;

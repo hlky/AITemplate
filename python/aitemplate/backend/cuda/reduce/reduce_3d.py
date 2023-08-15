@@ -181,7 +181,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
 #include <vector>
 #include <limits>
 #include <numeric>
-
+#include "short_file.h"
 #include "cutlass/cutlass.h"
 
 #include "cutlass/arch/memory.h"
@@ -202,7 +202,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
     if (status != cudaSuccess) {                             \\
       auto msg = std::string("Got error: ") +                \\
         cudaGetErrorString(status) +                         \\
-        " at " + __FILE__ + ": " + std::to_string(__LINE__); \\
+        " at " + __SHORT_FILE__ + ": " + std::to_string(__LINE__); \\
       std::cerr << msg << std::endl;                         \\
       throw std::runtime_error(msg);                         \\
     }                                                        \\

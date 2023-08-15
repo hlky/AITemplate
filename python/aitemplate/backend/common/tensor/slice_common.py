@@ -79,6 +79,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
 #include <string>
 #include <tuple>
 #include <vector>
+#include "short_file.h"
 
 {% if element_func_def %}
 //#include <cutlass/fast_math.h>
@@ -92,7 +93,7 @@ namespace {
     if (status != {{prefix}}Success) {                       \\
       auto msg = std::string("Got error: ") +                \\
         {{prefix}}GetErrorString(status) +                   \\
-        " at " + __FILE__ + ": " + std::to_string(__LINE__); \\
+        " at " + __SHORT_FILE__ + ": " + std::to_string(__LINE__); \\
       std::cerr << msg << std::endl;                         \\
       throw std::runtime_error(msg);                         \\
     }                                                        \\

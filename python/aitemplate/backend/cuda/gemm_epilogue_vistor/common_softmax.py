@@ -35,7 +35,7 @@ SRC_TEMPLATE = jinja2.Template(
 #include <memory>
 #include <random>
 #include <vector>
-
+#include "short_file.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/gemm/device/gemm_universal.h"
 #include "cutlass/gemm/kernel/gemm_grouped.h"
@@ -56,7 +56,7 @@ SRC_TEMPLATE = jinja2.Template(
   {                                                                                   \\
     cutlass::Status error = status;                                                   \\
     if (error != cutlass::Status::kSuccess) {                                         \\
-      auto msg = std::string("[") + __FILE__ + "] Got cutlass error: " +              \\
+      auto msg = std::string("[") + __SHORT_FILE__ + "] Got cutlass error: " +              \\
           cutlassGetStatusString(error) + " at: " + std::to_string(__LINE__);         \\
       std::cerr << msg << std::endl;                                                  \\
       throw std::runtime_error(msg);                                                  \\
@@ -343,7 +343,7 @@ struct ProfilerMemoryPool {
     cudaError_t cuda_error = cudaMemGetInfo(&free_global_mem, &total_global_mem);
     if (cuda_error != cudaSuccess) {
       auto error_msg = std::string("Failed to invoke cudaMemGetInfo: ") +
-          cudaGetErrorName(cuda_error) + ", at " + __FILE__;
+          cudaGetErrorName(cuda_error) + ", at " + __SHORT_FILE__;
       throw std::runtime_error(error_msg);
     }
     size_t single_copy_nbytes = one_copy_sz * sizeof(DType);
@@ -362,7 +362,7 @@ struct ProfilerMemoryPool {
         auto error_msg = std::string("no enough GPU memory: requested ") +
             std::to_string(minimal_required_nbytes) + ", available: " +
             std::to_string(free_global_mem) + ", ptr_max_sz: " +
-            std::to_string(ptr_max_sz) + ", at " + __FILE__;
+            std::to_string(ptr_max_sz) + ", at " + __SHORT_FILE__;
         throw std::runtime_error(error_msg);
       } else {
         // Let's try to allocate a single blob that is large enough to hold

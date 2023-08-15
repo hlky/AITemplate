@@ -44,6 +44,7 @@
 
 #pragma once
 
+#include "short_file.h"
 #include <assert.h>
 #include <cuda_fp16.h>
 #include <cuda_runtime_api.h>
@@ -59,7 +60,7 @@
   do {                                                            \
     cudaError_t status_ = call;                                   \
     if (status_ != cudaSuccess) {                                 \
-      auto msg = std::string("CUDA error(") + __FILE__ + ":" +    \
+      auto msg = std::string("CUDA error(") + __SHORT_FILE__ + ":" +    \
           std::to_string(__LINE__) + cudaGetErrorString(status_); \
       std::cerr << msg << std::endl;                              \
       throw std::runtime_error(msg);                              \

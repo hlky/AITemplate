@@ -242,7 +242,7 @@ SRC_TEMPLATE = jinja2.Template(
 #include <memory>
 #include <random>
 #include <vector>
-
+#include "short_file.h"
 #include <cuda_bf16.h>
 #include "cutlass/cutlass.h"
 #include "cutlass/epilogue/thread/linear_combination_residual_block.h"
@@ -266,7 +266,7 @@ using bfloat16 = nv_bfloat16;
   {                                                                                   \\
     cutlass::Status error = status;                                                   \\
     if (error != cutlass::Status::kSuccess) {                                         \\
-      auto msg = std::string("[") + __FILE__ + "] Got cutlass error: " +              \\
+      auto msg = std::string("[") + __SHORT_FILE__ + "] Got cutlass error: " +              \\
           cutlassGetStatusString(error) + " at: " + std::to_string(__LINE__);         \\
       std::cerr << msg << std::endl;                                                  \\
       throw std::runtime_error(msg);                                                  \\

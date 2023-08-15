@@ -32,6 +32,7 @@ from aitemplate.backend.cuda import cuda_common
 from aitemplate.compiler.base import IntImm, IntVar
 
 header_files = """
+#include "short_file.h"
 #include <cuda_fp16.h>
 #include "cutlass/cutlass.h"
 #include "cutlass/fast_math.h"
@@ -62,7 +63,7 @@ SRC_TEMPLATE = jinja2.Template(
   do {                                                        \\
     cudaError_t status = (expr);                              \\
     if (status != cudaSuccess) {                              \\
-        std::cerr << msg << " at " << __FILE__                \\
+        std::cerr << msg << " at " << __SHORT_FILE__                \\
                   << ": " << __LINE__ << std::endl;           \\
         throw std::runtime_error(cudaGetErrorString(status)); \\
     }                                                         \\

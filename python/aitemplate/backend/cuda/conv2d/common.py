@@ -98,7 +98,7 @@ SRC_TEMPLATE = jinja2.Template(
     """
 #include <cstdio>
 #include <stdexcept>
-
+#include "short_file.h"
 #include "cutlass/cutlass.h"
 {% if is_transpose %}
 #include "cutlass/conv/kernel/default_conv2d_dgrad.h"
@@ -120,7 +120,7 @@ SRC_TEMPLATE = jinja2.Template(
     if (error != cutlass::Status::kSuccess) {                                         \\
       static char msg[2048];                                                          \\
       snprintf(msg, sizeof(msg), "[%s] Got cutlass error: %s at: %s",                 \\
-        __FILE__, cutlassGetStatusString(error), __LINE__);                           \\
+        __SHORT_FILE__, cutlassGetStatusString(error), __LINE__);                           \\
       fprintf(stderr, msg);                                                           \\
       throw std::runtime_error(msg);                                                  \\
     }                                                                                 \\

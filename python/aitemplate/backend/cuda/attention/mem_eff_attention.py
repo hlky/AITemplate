@@ -30,7 +30,7 @@ CUDA_CHECK = """
   do {                                                                         \\
     cudaError_t status = (expr);                                               \\
     if (status != cudaSuccess) {                                               \\
-      std::cerr << msg << " at " << __FILE__ << ": " << __LINE__ << std::endl; \\
+      std::cerr << msg << " at " << __SHORT_FILE__ << ": " << __LINE__ << std::endl; \\
       throw std::runtime_error(cudaGetErrorString(status));                    \\
     }                                                                          \\
   } while (0)
@@ -41,6 +41,7 @@ FUNC_TEMPLATE_KERNEL_FWD = jinja2.Template(
     """
 #include <iostream>
 #include <cuda_fp16.h>
+#include "short_file.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/gemm/device/default_gemm_configuration.h"
 
@@ -179,7 +180,7 @@ using namespace gemm_kernel_utils;
     }
     if (!Attention::check_supported(p)) {
       std::string error_msg = std::string("Got error: kernel does not support these inputs") +
-           " at " + __FILE__ + ": " + std::to_string(__LINE__);
+           " at " + __SHORT_FILE__ + ": " + std::to_string(__LINE__);
       throw std::runtime_error(error_msg);
     }
     kernel_fn<<<p.getBlocksGrid(), p.getThreadsGrid(), smem_bytes, stream>>>(p);
@@ -327,7 +328,7 @@ using namespace gemm_kernel_utils;
 
   if (({{head_size}} % AttentionKernel::kAlignmentQ != 0) ||
       ({{head_size}} % AttentionKernel::kAlignmentK != 0)) {
-    std::cerr << "Error at " << __FILE__ << ": " << __LINE__ <<
+    std::cerr << "Error at " << __SHORT_FILE__ << ": " << __LINE__ <<
         "head_size not aligned! head_size has to be divisible by " <<
         std::to_string(AttentionKernel::kAlignmentQ) << " and " <<
         std::to_string(AttentionKernel::kAlignmentK) + ", but got {{head_size}}."

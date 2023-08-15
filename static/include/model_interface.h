@@ -13,7 +13,7 @@
 //  limitations under the License.
 //
 #pragma once
-
+#include "short_file.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <numeric>
@@ -46,7 +46,7 @@ enum class AITemplateError : int {
 #define AIT_ERROR_CHECK(call)                                             \
   if ((call) != AITemplateError::AITemplateSuccess) {                     \
     throw std::runtime_error(                                             \
-        std::string(#call " API call failed at ") + __FILE__ + ", line" + \
+        std::string(#call " API call failed at ") + __SHORT_FILE__ + ", line" + \
         std::to_string(__LINE__));                                        \
   }
 

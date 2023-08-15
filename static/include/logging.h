@@ -17,6 +17,7 @@
 
 #ifndef DMLC_LOGGING_H_
 #define DMLC_LOGGING_H_
+#include "short_file.h"
 #include <cstdio>
 #include <cstdlib>
 #include <memory>
@@ -306,13 +307,13 @@ DEFINE_CHECK_FUNC(_NE, !=)
 
 #define CHECK_BINARY_OP(name, op, x, y)                   \
   if (auto __dmlc__log__err = dmlc::LogCheck##name(x, y)) \
-  dmlc::LogMessageFatal(__FILE__, __LINE__).stream()      \
+  dmlc::LogMessageFatal(__SHORT_FILE__, __LINE__).stream()      \
       << "Check failed: " << #x " " #op " " #y << *__dmlc__log__err << ": "
 
 // Always-on checking
 #define CHECK(x)                                     \
   if (!(x))                                          \
-  dmlc::LogMessageFatal(__FILE__, __LINE__).stream() \
+  dmlc::LogMessageFatal(__SHORT_FILE__, __LINE__).stream() \
       << "Check failed: " #x << ": "
 #define CHECK_LT(x, y) CHECK_BINARY_OP(_LT, <, x, y)
 #define CHECK_GT(x, y) CHECK_BINARY_OP(_GT, >, x, y)
@@ -321,7 +322,7 @@ DEFINE_CHECK_FUNC(_NE, !=)
 #define CHECK_EQ(x, y) CHECK_BINARY_OP(_EQ, ==, x, y)
 #define CHECK_NE(x, y) CHECK_BINARY_OP(_NE, !=, x, y)
 #define CHECK_NOTNULL(x)                                            \
-  ((x) == NULL ? dmlc::LogMessageFatal(__FILE__, __LINE__).stream() \
+  ((x) == NULL ? dmlc::LogMessageFatal(__SHORT_FILE__, __LINE__).stream() \
        << "Check  notnull: " #x << ' ',                             \
    (x)                                                              \
                : (x)) // NOLINT(*)
@@ -360,13 +361,13 @@ DEFINE_CHECK_FUNC(_NE, !=)
 #endif // DMLC_LOG_DEBUG
 
 #if DMLC_LOG_CUSTOMIZE
-#define LOG_INFO dmlc::CustomLogMessage(__FILE__, __LINE__)
+#define LOG_INFO dmlc::CustomLogMessage(__SHORT_FILE__, __LINE__)
 #else
-#define LOG_INFO dmlc::LogMessage(__FILE__, __LINE__)
+#define LOG_INFO dmlc::LogMessage(__SHORT_FILE__, __LINE__)
 #endif
 #define LOG_ERROR LOG_INFO
 #define LOG_WARNING LOG_INFO
-#define LOG_FATAL dmlc::LogMessageFatal(__FILE__, __LINE__)
+#define LOG_FATAL dmlc::LogMessageFatal(__SHORT_FILE__, __LINE__)
 #define LOG_QFATAL LOG_FATAL
 
 // Poor man version of VLOG

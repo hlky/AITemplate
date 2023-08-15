@@ -12,7 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
-
+#include "short_file.h"
 #include <stdexcept>
 #include <string>
 
@@ -37,7 +37,7 @@ namespace ait {
 
 #define TRIGGER_ERROR(message)                        \
   throw std::runtime_error(                           \
-      (message) + " at file " + __FILE__ + ", line" + \
+      (message) + " at file " + __SHORT_FILE__ + ", line" + \
       std::to_string(__LINE__));
 
 void GetConstantsBin(void** address, size_t* size) {

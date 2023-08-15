@@ -67,6 +67,7 @@ SRC_TEMPLATE = jinja2.Template(
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include "short_file.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/conv/kernel/default_conv3d_fprop.h"
 #include "cutlass/conv/device/implicit_gemm_convolution.h"
@@ -79,7 +80,7 @@ SRC_TEMPLATE = jinja2.Template(
   {                                                                                   \\
     cutlass::Status error = status;                                                   \\
     if (error != cutlass::Status::kSuccess) {                                         \\
-      auto msg = std::string("[") + __FILE__ + "] Got cutlass error: " +              \\
+      auto msg = std::string("[") + __SHORT_FILE__ + "] Got cutlass error: " +              \\
           cutlassGetStatusString(error) + " at: " + std::to_string(__LINE__);         \\
       std::cerr << msg << std::endl;                                                  \\
       throw std::runtime_error(msg);                                                  \\

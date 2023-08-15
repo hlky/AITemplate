@@ -43,6 +43,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include "short_file.h"
 
 {{header_src}}
 
@@ -53,7 +54,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
     if (status != {{prefix}}Success) {                       \\
       auto msg = std::string("Got error: ") +                \\
         {{prefix}}GetErrorString(status) +                   \\
-        " at " + __FILE__ + ": " + std::to_string(__LINE__); \\
+        " at " + __SHORT_FILE__ + ": " + std::to_string(__LINE__); \\
       std::cerr << msg << std::endl;                         \\
       throw std::runtime_error(msg);                         \\
     }                                                        \\

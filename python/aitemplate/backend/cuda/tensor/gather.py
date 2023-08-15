@@ -45,7 +45,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
     """
 #include <assert.h>
 #include <cuda_fp16.h>
-
+#include "short_file.h"
 #include <chrono>
 #include <functional>
 #include <iostream>
@@ -58,7 +58,7 @@ KERNEL_SRC_TEMPLATE = jinja2.Template(
     if (status != cudaSuccess) {                             \\
       auto msg = std::string("Got error: ") +                \\
        cudaGetErrorString(status) +                          \\
-        " at " + __FILE__ + ": " + std::to_string(__LINE__); \\
+        " at " + __SHORT_FILE__ + ": " + std::to_string(__LINE__); \\
       std::cerr << msg << std::endl;                         \\
       throw std::runtime_error(msg);                         \\
     }                                                        \\
