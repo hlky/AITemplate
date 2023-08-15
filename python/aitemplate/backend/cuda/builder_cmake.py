@@ -228,7 +228,10 @@ class BuilderCMake:
 
         device_compiler_options = Target.current().get_device_compiler_options()
         if is_windows():
-            host_compiler_options = ["-Xcompiler=/Zc:__cplusplus"]
+            host_compiler_options = [
+                "-Xcompiler=/Zc:__cplusplus",
+                "-D_DISABLE_EXTENDED_ALIGNED_STORAGE",
+            ]
         else:
             host_compiler_options = [
                 f"-Xcompiler {opt}" if "=" in opt else f"-Xcompiler={opt}"
@@ -257,14 +260,18 @@ class BuilderCMake:
 
         # go ahead
         for source, profiler_binary in file_pairs:
-            test_name = short_str(str(source))
+            if type(source) is not list:
+                source = [source]
+            test_name = short_str(str(source[0]))
 
-            build_dir = Path(source).parent / test_name
+            build_dir = Path(source[0]).parent / test_name
             build_dir.mkdir(exist_ok=True)
 
             rendered = cmake_template.render(
                 CMAKE_PROJECT=test_name,
-                CMAKE_SOURCE_FILES=_files_as_str("../" + str(Path(source).name)),
+                CMAKE_SOURCE_FILES=_files_as_str(
+                    [f"../{str(Path(s).name)}" if ":" not in s else s for s in source]
+                ),
                 # # todo: this can be done once we're able to track header files
                 # # properly
                 # CMAKE_HEADER_FILES=_files_as_str(
