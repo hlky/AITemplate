@@ -346,9 +346,9 @@ def compile_model(
             _LOGGER.info(
                 f"compiled the final .so file elapsed time: {elapsed_dt_sec(start_t)}",
             )
-
+    total_usage = max_blob + max_constant_blob + workspace.total_size()
     module = Model(
         os.path.join(workdir, test_name, dll_name), num_runtimes, allocator_kind
     )
     module.debug_sorted_graph = graph
-    return module
+    return total_usage
