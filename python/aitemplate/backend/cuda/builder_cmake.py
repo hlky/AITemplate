@@ -293,7 +293,7 @@ class BuilderCMake:
             # execute cmake
             cmake_build_dir = build_dir / "build"
             cmake_cmd = Target.current().cmake()
-            cmake_command_line = f"{_render_path(cmake_cmd)} -B {_render_path(cmake_build_dir)} -S {_render_path(build_dir)}"
+            cmake_command_line = f"{_render_path(cmake_cmd)} -B {_render_path(cmake_build_dir)} -S {_render_path(build_dir)} -G \"Visual Studio 17 2022\" -A x64"
             _run_cmd(cmake_command_line, self._timeout)
 
             # execute build system
@@ -415,7 +415,7 @@ class BuilderCMake:
         # execute cmake
         cmake_build_dir = build_dir / "build"
         cmake_cmd = Target.current().cmake()
-        cmake_command_line = f"{_render_path(cmake_cmd)} -B {_render_path(cmake_build_dir)} -S {_render_path(build_dir)}"
+        cmake_command_line = f"{_render_path(cmake_cmd)} -B {_render_path(cmake_build_dir)} -S {_render_path(build_dir)} -G \"Visual Studio 17 2022\" -A x64"
         _run_cmd(cmake_command_line, self._timeout)
 
         # execute build system
