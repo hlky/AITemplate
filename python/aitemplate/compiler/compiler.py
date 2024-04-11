@@ -351,4 +351,5 @@ def compile_model(
         os.path.join(workdir, test_name, dll_name), num_runtimes, allocator_kind
     )
     module.debug_sorted_graph = graph
-    return total_usage
+    module.total_usage = total_usage
+    return module
