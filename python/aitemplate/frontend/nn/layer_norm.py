@@ -30,6 +30,8 @@ class LayerNorm(Module):
         normalized_shape,
         eps=1e-5,
         dtype="float16",
+        elementwise_affine=True,
+        bias=True,
         **kwargs,
     ):
         """Standalone layernorm op.
@@ -47,12 +49,19 @@ class LayerNorm(Module):
             if isinstance(normalized_shape, (tuple, list))
             else (normalized_shape,)
         )
-        self.weight = Parameter(shape=self.dim, dtype=dtype)
-        self.bias = Parameter(shape=self.dim, dtype=dtype)
+        if elementwise_affine:
+            self.weight = Parameter(shape=self.dim, dtype=dtype)
+            if bias:
+                self.bias = Parameter(shape=self.dim, dtype=dtype)
+        else:
+            self.weight = None
+            self.bias = None
         self.op = ops.layernorm()
 
     def forward(self, *args):
         assert len(args) == 1
         x = args[0]
-        y = self.op(x, self.weight.tensor(), self.bias.tensor(), self.dim, self.eps)
+        weight = self.weight.tensor() if self.weight is not None else None
+        bias = self.bias.tensor() if self.bias is not None else None
+        y = self.op(x, weight, bias, self.dim, self.eps)
         return y
