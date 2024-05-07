@@ -17,11 +17,14 @@ A common place for holding AIT-related env control variables
 """
 import logging
 import os
+import sys
 from typing import Optional
 
 
 _LOGGER = logging.getLogger(__name__)
 
+def is_windows() -> bool:
+    return sys.platform == "win32"
 
 def get_compiler_opt_level() -> str:
     # The reason: it is typical in our situation that an option
@@ -239,7 +242,7 @@ def is_cmake_compilation() -> bool:
     """
 
     # todo: replace with more builders?
-    return os.getenv("AIT_USE_CMAKE_COMPILATION", "0") == "1"
+    return os.getenv("AIT_USE_CMAKE_COMPILATION", "1" if is_windows() else "0") == "1"
 
 
 def enable_standalone_exe_generation() -> bool:
