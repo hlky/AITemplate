@@ -910,6 +910,50 @@ class Model:
         self.torch_constant_tensors[name] = tensor
         self.set_constant(name, torch_to_ait_data(tensor))
 
+    def get_input_maximum_shape(
+        self, input_idx_or_name: Union[int, str]
+    ) -> List[int]:
+        """
+        Get the maximum input shape. The input here can either be an input name
+        or an index. The index is the runtime's internal index (as specified by
+        GetInputNameToIndexMap)
+        """
+        if isinstance(input_idx_or_name, int):
+            input_idx = input_idx_or_name
+        elif isinstance(input_idx_or_name, str):
+            if input_idx_or_name not in self._input_name_to_index:
+                raise ValueError(
+                    f"Name {input_idx_or_name} not in InputNameToIndexMap! Available names: {list(self._input_name_to_index.keys())}"
+                )
+            input_idx = self._input_name_to_index[input_idx_or_name]
+        else:
+            raise TypeError(
+                f"input_idx_or_name must be str or int, but got {type(input_idx_or_name)}"
+            )
+
+        class Shape(ctypes.Structure):
+            _fields_ = [
+                ("shape_data", ctypes.POINTER(ctypes.c_longlong)),
+                ("size", ctypes.c_size_t),
+            ]
+
+        raw_shape = Shape()
+        self.DLL.AITemplateModelContainerGetMaximumInputShape(
+            self.handle, input_idx, ctypes.byref(raw_shape)
+        )
+        return [raw_shape.shape_data[idx] for idx in range(raw_shape.size)]
+
+    def get_input_dtype(self, index):
+        """
+        Get the expected dtype of an input.
+        """
+        input = ctypes.c_int()
+        self.DLL.AITemplateModelContainerGetInputDtype(
+            self.handle, index, ctypes.byref(input)
+        )
+        return input.value
+
+
     def get_output_maximum_shape(
         self, output_idx_or_name: Union[int, str]
     ) -> List[int]:
