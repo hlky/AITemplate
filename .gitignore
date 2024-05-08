@@ -144,3 +144,9 @@ tags
 
 # vim temp files
 *.swp
+
+# model checkpoint
+*.ckpt
+*.pt
+*.pth
+*.safetensors
