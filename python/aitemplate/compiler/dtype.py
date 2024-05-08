@@ -16,6 +16,7 @@
 dtype definitions and utility functions of AITemplate
 """
 
+import torch
 
 _DTYPE2BYTE = {
     "bool": 1,
@@ -45,6 +46,28 @@ _DTYPE_TO_ENUM = {
     "bfloat16": 6,
 }
 
+_ENUM_TO_DTYPE = {v: k for k, v in _DTYPE_TO_ENUM.items()}
+
+_ENUM_TO_TORCH_DTYPE = {
+    1: torch.float16,
+    2: torch.float32,
+    3: torch.int32,
+    4: torch.int64,
+    5: torch.bool,
+    6: torch.bfloat16,
+}
+
+
+_DTYPE_TO_TORCH_DTYPE = {
+    "float16": torch.float16,
+    "float32": torch.float32,
+    "float": torch.float32,
+    "int": torch.int32,
+    "int32": torch.int32,
+    "int64": torch.int64,
+    "bool": torch.bool,
+    "bfloat16": torch.bfloat16,
+}
 
 def get_dtype_size(dtype: str) -> int:
     """Returns size (in bytes) of the given dtype str.
