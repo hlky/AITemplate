@@ -150,3 +150,8 @@ tags
 *.pt
 *.pth
 *.safetensors
+
+# build
+python/aitemplate/3rdparty/
+python/aitemplate/licenses/
+python/aitemplate/static/
