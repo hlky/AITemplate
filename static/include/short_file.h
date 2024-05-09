@@ -1,3 +1,5 @@
+#include <string>
+
 #ifdef __unix__
 #define PATH_DELIMITER '/'
 #else
