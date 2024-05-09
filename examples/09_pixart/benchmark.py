@@ -72,6 +72,8 @@ def benchmark_transformer2d(
     if failed:
         return
 
+    module.fold_constants(sync=True)
+
     benchmark_module(module)
 
 
