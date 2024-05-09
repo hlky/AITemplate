@@ -800,8 +800,8 @@ def gen_function(
         num_inputs=len(inputs),
         rank=len(x_shape),
         elem_type=input_type,
-        elems_per_thread=elems_per_thread,
-        threads_per_block=128,
+        elems_per_thread=480,
+        threads_per_block=1024,
         output_offset=output_offset,
     )
 

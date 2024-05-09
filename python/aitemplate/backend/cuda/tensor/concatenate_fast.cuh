@@ -603,7 +603,7 @@ void concatenateFastLauncher(
   int64_t stride = outputDim[concatDim];
 
   // run the CUDA kernel
-  const int32_t nThreadsPerBlock = 128;
+  const int32_t nThreadsPerBlock = 1024;
   const int64_t effNumOutputElements =
       numOutputElements / ChunkOutputT::NElements;
   const int32_t nBlocks =

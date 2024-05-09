@@ -31,7 +31,7 @@ CUDA_HEADER_FILES = """
 
 CONSTANT_TEMPLATE = jinja2.Template(
     """
-#define N_THREADS_PER_BLOCK 256
+#define N_THREADS_PER_BLOCK 1024
 
 const int N_ELEMENTS_PER_THREAD = sizeof({{read_t}}) / sizeof({{data_t}});
     """

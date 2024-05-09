@@ -358,8 +358,8 @@ def gen_function(func_attrs):
         indent="  ",
         rank=len(x_shape),
         elem_type=input_type,
-        elems_per_thread=2,
-        threads_per_block=128,
+        elems_per_thread=480,
+        threads_per_block=1024,
     )
     kernel_src = KERNEL_SRC_TEMPLATE.render(
         index_type=index_type,
