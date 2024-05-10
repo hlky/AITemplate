@@ -242,7 +242,7 @@ def _constant_folding_impl(
 
     blob, constant_blob, workspace = compiler.transform.memory_planning(subgraph)
     new_name_to_old = _make_op_names_unique(subgraph)
-    file_pairs = backend.codegen.gen_function_src(subgraph, workdir, model_name)
+    file_pairs = backend.codegen.gen_function_src(subgraph, workdir, model_name, cleanup=True)
     model_container_generator = backend.codegen.ModelContainerGenerator(
         blob,
         constant_blob,

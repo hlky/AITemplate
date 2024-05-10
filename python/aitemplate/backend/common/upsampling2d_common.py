@@ -43,6 +43,31 @@ EXEC_TEMPLATE = jinja2.Template(
 
 SRC_TEMPLATE = jinja2.Template(
     """
+{% if func_only %}
+void {{function_name}} (
+    const void* in_ptr,
+    {% if bias_add %}
+    const void* res_ptr,
+    {% endif %}
+    void* out_ptr,
+    {{index_type}}* batch,
+    {{index_type}}* in_h,
+    {{index_type}}* in_w,
+    {{index_type}}* in_ch,
+    {{index_type}}* out_batch,
+    {{index_type}}* out_h,
+    {{index_type}}* out_w,
+    {{prefix}}Stream_t stream
+) {
+
+  {{shape_function}}
+
+  {{exec_paths}}
+  throw std::runtime_error(
+      "Unsupported workload for this bilinear upsampling specialization."
+  );
+}
+{% else %}
 {{header_files}}
 
 namespace {
@@ -321,6 +346,7 @@ void {{function_name}} (
       "Unsupported workload for this bilinear upsampling specialization."
   );
 }
+{% endif %}
 """
 )
 

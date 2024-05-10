@@ -103,6 +103,37 @@ void {{func_name}}(
   """
 )
 
+FUNC_ONLY_TEMPLATE = jinja2.Template(
+    """
+
+void {{func_name}}(
+  void* dst,
+  const void* src,
+{% for i in range(input_rank) %}
+  int64_t* dim_{{i}},
+{% endfor %}
+  const int* permutation,
+  cudaStream_t stream
+){
+    // invoke permute kernel
+    int64_t src_dims[] = {
+{% for i in range(input_rank - 1) %}
+  *dim_{{i}},
+{% endfor %}
+  *dim_{{input_rank - 1}}
+    };
+    for (int i = 0; i < {{input_rank}}; i++) {
+        if (src_dims[i] == 0) {
+            // empty input: nothing to do
+            return;
+        }
+    }
+    invokePermute<{{input_rank}}, {{elem_type}}>(dst, src, src_dims, permutation, stream);
+}
+
+    """
+)
+
 
 @registry.reg("cuda.permute.gen_function")
 def gen_function(func_attrs: Dict[str, Any]) -> str:
@@ -133,6 +164,13 @@ def gen_function(func_attrs: Dict[str, Any]) -> str:
         "float",
     ), "permute is only tested for floating point type"
     backend_type = CUDASpec().dtype_to_backend_dtype[dtype]
+    func_only = func_attrs.get("func_only", False)
+    if func_only:
+        return FUNC_ONLY_TEMPLATE.render(
+            func_name=func_name,
+            input_rank=rank,
+            elem_type=backend_type,
+        )
     return SRC_TEMPLATE.render(
         func_name=func_name,
         custom_libs=custom_libs,

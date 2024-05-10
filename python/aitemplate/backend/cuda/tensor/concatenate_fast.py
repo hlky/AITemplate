@@ -185,7 +185,14 @@ def gen_function(
         input_accessor_defs=input_accessor_defs,
         func_name=func_attrs["name"],
     )
-
+    func_only = func_attrs.get("func_only", False)
+    if func_only:
+        return src_template.render(
+            func_name=func_attrs["name"],
+            exec_paths=exec_paths,
+            index_type=backend_spec.index_type,
+            prefix=backend_spec.prefix,
+        )
     return src_template.render(
         kernel_src=kernel_src,
         func_name=func_attrs["name"],

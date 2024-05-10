@@ -183,6 +183,29 @@ EXEC_TEMPLATE = jinja2.Template(
 
 SRC_TEMPLATE = jinja2.Template(
     """
+{% if func_only %}
+void {{function_name}} (
+    const void* in_ptr,
+    void* out_ptr,
+    int64_t x_dim0,
+    int64_t x_dim1,
+    int64_t x_dim2,
+    int64_t x_dim3,
+    {{prefix}}Stream_t stream
+) {
+  if (x_dim0 == 0 || x_dim1 == 0 || x_dim2 == 0 || x_dim3 == 0) {
+    // empty input: nothing to do
+    return;
+  }
+  if (!in_ptr) {
+    throw std::runtime_error("in_ptr is NULL!");
+  }
+  if (!out_ptr) {
+    throw std::runtime_error("out_ptr is NULL!");
+  }
+  {{exec_paths}}
+}
+{% else %}
 {{header_files}}
 
 #define TILE_SIZE 32
@@ -389,7 +412,7 @@ void {{function_name}} (
   }
   {{exec_paths}}
 }
-
+{% endif %}
 """
 )
 
@@ -424,8 +447,10 @@ def gen_function(
         indent="  ",
         dtype=backend_spec.dtype_to_backend_type(xdtype),
     )
+    func_only = func_attrs.get("func_only", False)
     return SRC_TEMPLATE.render(
         function_name=func_name,
+        func_only=func_only,
         exec_paths=exec_paths,
         header_files=header_files,
         prefix=backend_spec.prefix,

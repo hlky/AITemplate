@@ -31,6 +31,19 @@ from aitemplate.backend.target import Target
 
 FUNC_TEMPLATE = jinja2.Template(
     """
+{% if func_only %}
+{{func_signature}}
+{
+    {{input_accessor}}
+    {{output_accessor}}
+    return invokeLayernormSigmoidMul<{{elem_input_type}}, float, {{fuse_sigmoid_mul}}>(
+        static_cast<{{elem_input_type}}*>(output),
+        static_cast<const {{elem_input_type}}*>(input),
+        static_cast<const {{elem_input_type}}*>(gamma),
+        static_cast<const {{elem_input_type}}*>(beta),
+        m, n, eps, stream, input_accessor, output_accessor);
+}
+{% else %}
 #include <cuda.h>
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
@@ -67,6 +80,7 @@ namespace {
         static_cast<const {{elem_input_type}}*>(beta),
         m, n, eps, stream, input_accessor, output_accessor);
 }
+{% endif %}
     """
 )
 
@@ -133,8 +147,9 @@ def layernorm_gen_function(func_attrs: Dict[str, Any]) -> str:
     elem_input_type = backend_spec.dtype_to_backend_type(
         func_attrs["inputs"][0]._attrs["dtype"]
     )
-
+    func_only = func_attrs.get("func_only", False)
     return FUNC_TEMPLATE.render(
+        func_only=func_only,
         custom_libs=_get_custom_libs(),
         tensor_accessor_libs=tensor_accessor_codegen.get_libs(),
         func_signature=FUNC_SIGNATURE.render(func_name=func_attrs["name"]),
@@ -157,7 +172,9 @@ def layernorm_sigmoid_mul_gen_function(func_attrs: Dict[str, Any]) -> str:
     elem_input_type = backend_spec.dtype_to_backend_type(
         func_attrs["inputs"][0]._attrs["dtype"]
     )
+    func_only = func_attrs.get("func_only", False)
     return FUNC_TEMPLATE.render(
+        func_only=func_only,
         custom_libs=_get_custom_libs(),
         tensor_accessor_libs=tensor_accessor_codegen.get_libs(),
         func_signature=FUNC_SIGNATURE.render(func_name=func_attrs["name"]),

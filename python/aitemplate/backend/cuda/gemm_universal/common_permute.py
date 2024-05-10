@@ -188,7 +188,9 @@ def gen_function(
         weight_ndims=weight_ndims,
         output_ndims=output_ndims,
     )
-    return src_template.render(
+    func_only = func_attrs.get("func_only", False)
+    func = src_template.render(
+        func_only=func_only,
         instances=instance_decl,
         function_name=func_name,
         dtype="cutlass::half_t",
@@ -205,6 +207,9 @@ def gen_function(
         has_d1=common.has_d1(func_attrs),
         extra_code=extra_code,
     )
+    if func_only:
+        return func, instance_decl
+    return func
 
 
 def gen_profiler(

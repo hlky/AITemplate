@@ -238,6 +238,9 @@ PROFILER_PROBLEM_ARGS_TEMPLATE_CUTLASS_3X = jinja2.Template(
 
 SRC_TEMPLATE = jinja2.Template(
     """
+{% if func_only %}
+{{instances}}
+{% else %}
 #include <iostream>
 #include <memory>
 #include <random>
@@ -274,6 +277,7 @@ using bfloat16 = nv_bfloat16;
   }
 
 {{instances}}
+{% endif %}
 
 {% if is_profiler %}
 template <typename GemmInstance>

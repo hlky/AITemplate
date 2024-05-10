@@ -21,7 +21,7 @@ from aitemplate.backend import registry
 
 SRC_TEMPLATE = jinja2.Template(
     """
-#include <cuda_runtime.h>
+{{header_src}}
 
 void {{function_name}} (
     {{input_args}}
@@ -108,8 +108,10 @@ def reshape_gen_function(func_attrs, shape_eval_template):
         output_ndim=output_ndim,
         unknown_idx=unknown_idx,
     )
-
+    func_only = func_attrs.get("func_only", False)
+    header = "#include <cuda_runtime.h>\n" if not func_only else ""
     return SRC_TEMPLATE.render(
+        header_src=header,
         function_name=func_name,
         shape_functions=shape_functions.strip(),
         input_args=input_args.strip(),
