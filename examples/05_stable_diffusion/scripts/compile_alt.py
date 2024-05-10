@@ -31,26 +31,26 @@ from src.compile_lib.compile_vae_alt import compile_vae
 @click.command()
 @click.option(
     "--local-dir",
-    default="./tmp/diffusers-pipeline/runwayml/stable-diffusion-v1-5",
+    default="runwayml/stable-diffusion-v1-5",
     help="the local diffusers pipeline directory",
 )
 @click.option(
     "--width",
-    default=(64, 2048),
+    default=(64, 1024),
     type=(int, int),
     nargs=2,
     help="Minimum and maximum width",
 )
 @click.option(
     "--height",
-    default=(64, 2048),
+    default=(64, 1024),
     type=(int, int),
     nargs=2,
     help="Minimum and maximum height",
 )
 @click.option(
     "--batch-size",
-    default=(1, 4),
+    default=(1, 1),
     type=(int, int),
     nargs=2,
     help="Minimum and maximum batch size",
