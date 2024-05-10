@@ -87,7 +87,7 @@ template<> struct Traits<NumericTraitsType>
   : NumericTraits<bfloat16> {};
 
 }  // namespace cub
-
+#endif
 """
 
 
