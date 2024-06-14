@@ -72,11 +72,10 @@ def gen_function(func_attrs, element_func=None, element_func_def=None):
     str
         Rendered function body.
     """
-    func_only = func_attrs.get("func_only", False)
     if _is_valid_fast_cat(func_attrs):
         return concatenate_fast.gen_function(
             func_attrs,
-            concatenate_common.FUNC_ONLY_TEMPLATE if func_only else concatenate_common.SRC_TEMPLATE,
+            concatenate_common.SRC_TEMPLATE,
             element_func=element_func,
             element_func_def=element_func_def,
         )

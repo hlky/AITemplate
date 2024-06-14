@@ -520,9 +520,6 @@ def gen_function(func_attrs, backend_spec):
         prefix=backend_spec.prefix,
         header_src=header_src,
     )
-    func_only = func_attrs.get("func_only", False)
-    if func_only:
-        kernel_src = ""
     return SRC_TEMPLATE.render(
         kernel_src=kernel_src,
         func_name=func_attrs["name"],

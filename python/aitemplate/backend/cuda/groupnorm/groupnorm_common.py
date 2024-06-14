@@ -65,25 +65,6 @@ FUNC_CALL_TEMPLATE = jinja2.Template(
 
 FUNC_TEMPLATE = jinja2.Template(
     """
-{% if func_only %}
-{{func_signature}}
-{
-    *HO = *H;
-    *WO = *W;
-    return invokeGroupNorm<{{elem_input_type}}, {{FuseSwish}}, {{C}}, {{G}}>(
-            static_cast<{{elem_input_type}}*>(output),
-            static_cast<{{elem_input_type}}*>(input),
-            static_cast<{{elem_input_type}}*>(gamma),
-            static_cast<{{elem_input_type}}*>(beta),
-            N,
-            H,
-            W,
-            eps,
-            max_smem_size,
-            workspace,
-            stream);
-}
-{% else %}
 #include <cuda.h>
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
@@ -127,7 +108,6 @@ namespace {
             workspace,
             stream);
 }
-{% endif %}
     """
 )
 
@@ -174,9 +154,7 @@ def groupnorm_gen_function(func_attrs: Dict[str, Any]) -> str:
     elem_input_type = backend_spec.dtype_to_backend_type(
         func_attrs["inputs"][0]._attrs["dtype"]
     )
-    func_only = func_attrs.get("func_only", False)
     return FUNC_TEMPLATE.render(
-        func_only=func_only,
         helper_libs=Target.current().get_custom_libs(
             os.path.dirname(__file__), "layer_norm.cuh"
         ),

@@ -119,26 +119,19 @@ INPUT_OUTPUT_CHECKS_TEMPLATE = jinja2.Template(
 INSTANCE_TEMPLATE = jinja2.Template(
     """
 {{config}}
-{% if is_profiler %}
 using {{name}} = {{config_name}};
-{% endif %}
 """
 )
 
 INSTANCE_TEMPLATE_CUTLASS_3X = jinja2.Template(
     """
 {{config}}
-{% if is_profiler %}
 using {{name}} = cutlass::gemm::device::GemmUniversalAdapter<{{config_name}}>;
-{% endif %}
 """
 )
 
 SRC_TEMPLATE = jinja2.Template(
     """
-{% if func_only %}
-{{instances}}
-{% else %}
 #include <iostream>
 #include <memory>
 #include <random>
@@ -151,7 +144,6 @@ SRC_TEMPLATE = jinja2.Template(
 #include "cutlass/gemm/device/gemm_grouped.h"
 #include "cutlass/util/host_tensor.h"
 #include "cutlass/util/reference/host/tensor_fill.h"
-#include "cutlass/epilogue/thread/linear_combination_silu.h"
 #include "cutlass/util/reference/device/tensor_fill.h"
 #include "cutlass/util/device_memory.h"
 
@@ -161,43 +153,6 @@ SRC_TEMPLATE = jinja2.Template(
 #include "cutlass/gemm/collective/collective_builder.hpp"
 #include "cutlass/gemm/device/gemm_universal_adapter.h"
 #include "cutlass/epilogue/collective/collective_builder.hpp"
-
-#include "cutlass/epilogue/thread/linear_combination_residual_block.h"
-#include "cutlass/gemm/device/gemm_universal_with_broadcast.h"
-
-namespace cutlass {
-namespace epilogue {
-namespace thread {
-
-template <
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-                                                       ///< Usually it is 128/sizeof_bits<ElementOutput_>,
-                                                       ///< but we use 64 or 32 sometimes when there are not enough data to store
-  typename ElementAccumulator_ = ElementOutput_,       ///< Accumulator data type
-  typename ElementCompute_ = ElementOutput_,           ///< Data type used to compute linear combination
-  ScaleType::Kind Scale = ScaleType::Default,          ///< Control Alpha and Beta scaling
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest
->
-using LinearCombinationFastGELU = LinearCombinationGeneric<GELU_taylor, ElementOutput_, Count, ElementAccumulator_,
-                                                          ElementCompute_, Scale, Round, true>;
-
-template <
-  typename ElementOutput_,                             ///< Data type used to load and store tensors
-  int Count,                                           ///< Number of elements computed per operation
-                                                       ///< Usually it is 128/sizeof_bits<ElementOutput_>,
-                                                       ///< but we use 64 or 32 sometimes when there are not enough data to store
-  typename ElementAccumulator_ = ElementOutput_,       ///< Accumulator data type
-  typename ElementCompute_ = ElementOutput_,           ///< Data type used to compute linear combination
-  ScaleType::Kind Scale = ScaleType::Default,          ///< Control Alpha and Beta scaling
-  FloatRoundStyle Round = FloatRoundStyle::round_to_nearest
->
-using LinearCombinationTanh = LinearCombinationGeneric<Tanh, ElementOutput_, Count, ElementAccumulator_,
-                                                          ElementCompute_, Scale, Round, true>;
-
-} // namespace thread
-} // namespace epilogue
-} // namespace cutlass
 
 using bfloat16 = nv_bfloat16;
 
@@ -215,7 +170,6 @@ using bfloat16 = nv_bfloat16;
   }
 
 {{instances}}
-{% endif %}
 
 {% if is_profiler %}
 template <typename GemmInstance>
@@ -931,12 +885,6 @@ def gen_function(
     instances = {}
     instance_decl = ""
     exec_cond_to_cutlass_3x = {}
-
-    suffix = ""
-    op_name = func_attrs["op"]
-    if "gemm_rcr" in op_name:
-        suffix = f"{op_name.replace('gemm_rcr', '')}"
-
     for exec_item in exec_path.values():
         fname = "f" + sha1(exec_item.exec_cond.encode()).hexdigest()
         algo = exec_item.algo
@@ -955,19 +903,15 @@ def gen_function(
         instance_template = (
             INSTANCE_TEMPLATE_CUTLASS_3X if cutlass_3x else INSTANCE_TEMPLATE
         )
-        config_name = extract_config_name(
-            config,
-            cutlass_3x=cutlass_3x,
-        )
-        if suffix != "":
-            config = config.replace(config_name, f"{config_name}{suffix}")
-            config_name = f"{config_name}{suffix}"
         inst = instance_template.render(
             config=config,
             name=fname,
-            config_name=config_name,
+            config_name=extract_config_name(
+                config,
+                cutlass_3x=cutlass_3x,
+            ),
         )
-        instances[exec_item.exec_cond] = inst, config_name
+        instances[exec_item.exec_cond] = inst
         exec_cond_to_cutlass_3x[exec_item.exec_cond] = cutlass_3x
         instance_decl += inst
     shape_eval_func = gemm_common.gen_shape_eval_code(
@@ -976,9 +920,7 @@ def gen_function(
 
     exec_paths = ""
     for exec_cond in instances:
-        inst, config_name = instances[exec_cond]
-        instances[exec_cond] = inst
-        fname = config_name
+        fname = "f" + sha1(exec_cond.encode()).hexdigest()
         cutlass_3x = exec_cond_to_cutlass_3x[exec_cond]
         program = EXEC_TEMPLATE.render(
             indent="    ",
@@ -1001,9 +943,7 @@ def gen_function(
         weight_ndims=weight_ndims,
         output_ndims=output_ndims,
     )
-    func_only = func_attrs.get("func_only", False)
-    func = src_template.render(
-        func_only=func_only,
+    return src_template.render(
         instances=instance_decl,
         function_name=func_name,
         dtype="cutlass::half_t",
@@ -1022,9 +962,6 @@ def gen_function(
         elem_input_type=elem_input_type,
         elem_output_type=elem_output_type,
     )
-    if func_only:
-        return func, instance_decl
-    return func
 
 
 def build_profiler(file_pairs):
@@ -1222,7 +1159,6 @@ def gen_profiler(
             ),
             name=instance_name,
             config=config,
-            is_profiler=True,
         )
         benchmark_instance = BENCHMARK_INSTANCE_TEMPLATE.render(
             indent="  ",

@@ -77,9 +77,7 @@ def gen_function(
         program = upsampling2d_common.EXEC_TEMPLATE.render(dtype=input_type)
         exec_inst = exec_cond_template.render(indent="  ", cond=key, program=program)
         exec_paths += exec_inst
-    func_only = func_attrs.get("func_only", False)
     return upsampling2d_common.SRC_TEMPLATE.render(
-        func_only=func_only,
         header_files=Header_Files,
         function_name=func_name,
         shape_function=shape_func,

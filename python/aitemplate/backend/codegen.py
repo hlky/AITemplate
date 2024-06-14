@@ -93,7 +93,7 @@ def gen_profiler(sorted_graph: List[Tensor], workdir: str, dynamic_profiling_str
 
 
 def gen_function_src(
-    sorted_graph: List[Tensor], workdir: str, model_name: str = "", cleanup: bool = False
+    sorted_graph: List[Tensor], workdir: str, model_name: str = ""
 ) -> List[Tuple[str, str]]:
     """Generate functions source code files for the given graph
 
@@ -114,53 +114,16 @@ def gen_function_src(
     target = Target.current()
     file_pairs = []
     exist_func = set()
-    exist_inst = set()
-    prefix = Path(workdir) / model_name
-    # NOTE: `gen_function_src` runs twice, once for `constant_folding` and once for `codegen`
-    # we cleanup at `constant_folding` only, this stage can generate some functions afterwards we want to append
-    single_file_targets = ["fused_elementwise", "concatenate", "reshape", "split", "gemm_rcr", "permute", "mem_eff_attention", "groupnorm", "layernorm", "permute0213", "upsampling2d"]
-    if cleanup:
-        for target_name in single_file_targets:
-            single_file = prefix / f"{target_name}{target.src_extension()}"
-            if single_file.exists():
-                single_file.unlink()
+    prefix = os.path.join(workdir, model_name)
     for node in sorted_graph:
         for func in node.src_ops():
             fname = func._attrs["name"]
-            op_name = func._attrs["op"]
-            if op_name == "size":
-                continue
-            if op_name.startswith("gemm_rcr"):
-                op_name = "gemm_rcr"
-            if op_name.startswith("groupnorm"):
-                op_name = "groupnorm"
             if fname not in exist_func:
-                # TODO: combine other ops into one file
-                if op_name in single_file_targets:
-                    src_path: Path = prefix / f"{op_name}{target.src_extension()}"
-                    obj_path: Path = prefix / f"{op_name}.obj"
-                    path_exists = src_path.exists()
-                    if not path_exists:
-                        with src_path.open("w") as fo:
-                            fo.write(func.gen_function())
-                        file_pairs.append((str(src_path), str(obj_path)))
-                    else:
-                        func._attrs["func_only"] = True
-                        src = func.gen_function()
-                        if isinstance(src, tuple):
-                            src, instance = src
-                            if instance in exist_inst:
-                                src = src.replace(instance, "")
-                            else:
-                                exist_inst.add(instance)
-                        with src_path.open("a") as fo:
-                            fo.write(src)
-                else:
-                    src_path: Path = prefix / f"{fname}{target.src_extension()}"
-                    obj_path: Path = prefix / f"{fname}.obj"
-                    file_pairs.append((str(src_path), str(obj_path)))
-                    with src_path.open("w") as fo:
-                        fo.write(func.gen_function())
+                src_path = os.path.join(prefix, fname + target.src_extension())
+                obj_path = os.path.join(prefix, fname + ".obj")
+                file_pairs.append((src_path, obj_path))
+                with open(src_path, "w") as fo:
+                    fo.write(func.gen_function())
                 exist_func.add(fname)
     _LOGGER.info(f"generated {len(file_pairs)} function srcs")
     return file_pairs

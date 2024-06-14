@@ -526,113 +526,6 @@ void {{func_name}}(
 )
 
 
-FUNC_ONLY_TEMPLATE = jinja2.Template(
-    """
-
-void {{func_name}}(
-    void *output,
-    {{index_type}} *output_shape[],
-    const void *inputs[],
-    const {{index_type}} *real_input_shapes[], /* real_input_shapes, representing
-                                 shapes of those inputs whose masks are False,
-                                 i.e. inputs that will be copied to the output
-                                 tensor by concat.*/
-    const {{index_type}} *all_input_shapes[], /* all_input_shapes include both
-                                 kinds of inputs, i.e. no matter input_mask being
-                                 True or False */
-    const bool input_masks[],
-    const {{index_type}} concat_dim_sizes[],
-    {{index_type}} concat_dim,
-    {{index_type}} rank,
-    {{index_type}} num_real_inputs,
-    {{index_type}} num_all_inputs,
-    {{prefix}}Stream_t stream
-    ) {
-
-  if (rank <= 0) {
-    throw std::runtime_error("rank must be larger than 0!");
-  }
-  if (concat_dim >= rank) {
-    throw std::runtime_error("concat_dim must be smaller than rank!");
-  }
-  if (num_real_inputs < 1) {
-    throw std::runtime_error("the number of inputs must >= 1!");
-  }
-
-
-  for ({{index_type}} i = 0; i < rank; i++) {
-    if (i == concat_dim) continue;
-    {{index_type}} dim = real_input_shapes[0][i];
-
-    for ({{index_type}} j = 1; j < num_real_inputs; j++) {
-      if (real_input_shapes[j][i] != dim) {
-        throw std::runtime_error(
-          "invalid input shape, func_name: {{func_name}}, dim: " +
-          std::to_string(dim) + ", input_shape: " +
-          std::to_string(real_input_shapes[j][i])
-        );
-      }
-    }
-  }
-
-  {{index_type}} output_concat_dim_value = 0;
-  std::vector<int64_t> concat_dim_offsets;
-
-  for ({{index_type}} i = 0; i < num_all_inputs; i++) {
-    if (input_masks[i]) {
-      concat_dim_offsets.push_back(output_concat_dim_value);
-    }
-    output_concat_dim_value += concat_dim_sizes[i];
-  }
-  for ({{index_type}} i = 0; i < rank; i++) {
-    if (i == concat_dim) {
-      *(output_shape[i]) = output_concat_dim_value;
-    } else {
-      *(output_shape[i]) = real_input_shapes[0][i];
-    }
-  }
-
-  // If all input tensors are empty we are done
-  bool empty = false;
-  bool use_int32_index_math = true;
-  for (int i = 0; i < num_real_inputs; i++) {
-    int64_t num_elems = get_num_elems(real_input_shapes[i], rank);
-    if (get_num_elems(real_input_shapes[i], rank) != 0) {
-      empty = false;
-      // make sure input is valid for each non-zero-size tensor
-      if (!inputs[i]) {
-        throw std::runtime_error("NULL input is found at: " + std::to_string(i));
-      }
-    }
-    if (input_masks[i]) {
-      use_int32_index_math &= can_use_32bit_index_math(num_elems);
-    }
-  }
-
-  if (empty) {
-    return;
-  }
-
-  // if the output has any zero dim size, we are done
-  for (int i = 0; i < rank; i++) {
-    if (*output_shape[i] == 0)
-      return;
-  }
-  // make sure output is valid
-  if (!output) {
-    throw std::runtime_error("output is NULL!");
-  }
-
-{{exec_paths}}
-
-  throw std::runtime_error(
-      "Unsupported concat kernel specialization!"
-  );
-}
-"""
-)
-
-
 INPUT_SHAPE_DEF_TEMPLATE = jinja2.Template(
     """
 {{indent}}{{index_type}} {{input_shape_name}}[] = {
@@ -850,17 +743,9 @@ def gen_function(
         threads_per_block=threads_per_block,
         index_type=backend_spec.index_type,
     )
-    func_only = func_attrs.get("func_only", False)
 
     header_src = backend_spec.header_src_template.render()
     if len(inputs) > 0:
-        if func_only:
-            return SRC_TEMPLATE.render(
-            func_name=func_attrs["name"],
-            exec_paths=exec_paths,
-            index_type=backend_spec.index_type,
-            prefix=backend_spec.prefix,
-        )
         tensor_accessor_libs = tensor_accessor_codegen.get_libs()
         kernel_src = KERNEL_SRC_TEMPLATE.render(
             element_func=element_func,

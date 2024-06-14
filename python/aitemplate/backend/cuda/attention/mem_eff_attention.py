@@ -39,48 +39,6 @@ CUDA_CHECK = """
 
 FUNC_TEMPLATE_KERNEL_FWD = jinja2.Template(
     """
-{% if func_only %}
-void {{func_name}}(void* output,
-                   void* query,
-                   void* key,
-                   void* value,
-                   int64_t* batch_size,
-                   int64_t* seq_len_kv,
-                   int64_t* seq_len_q,
-                   int num_heads,
-                   int head_size,
-                   int head_size_v,
-                   float p_dropout,
-                   float softmax_scale,
-                   bool is_causal,
-                   bool fixed_seq_length_kv,
-                   int32_t* lengths_kv,
-                   bool fixed_seq_length_q,
-                   int32_t* lengths_q,
-                   void* workspace,
-                   cudaStream_t stream)
-{
-fused_multihead_attention<{{kIs64x64}}, {{kSingleValueIteration}}, {{kHeadSize}}>(output,
-                    query,
-                    key,
-                    value,
-                    batch_size,
-                    seq_len_kv,
-                    seq_len_q,
-                    num_heads,
-                    head_size,
-                    head_size_v,
-                    p_dropout,
-                    softmax_scale,
-                    is_causal,
-                    fixed_seq_length_kv,
-                    lengths_kv,
-                    fixed_seq_length_q,
-                    lengths_q,
-                    workspace,
-                    stream);
-}
-{% else %}
 #include <iostream>
 #include <cuda_fp16.h>
 #include "short_file.h"
@@ -95,26 +53,7 @@ using namespace gemm_kernel_utils;
 
 {{cuda_check}}
 
-template <bool kIs64x64, bool kSingleValueIteration, int kHeadSize>
-void fused_multihead_attention(void* output,
-  void* query,
-  void* key,
-  void* value,
-  int64_t* batch_size,
-  int64_t* seq_len_kv,
-  int64_t* seq_len_q,
-  int num_heads,
-  int head_size,
-  int head_size_v,
-  float p_dropout,
-  float softmax_scale,
-  bool is_causal,
-  bool fixed_seq_length_kv,
-  int32_t* lengths_kv,
-  bool fixed_seq_length_q,
-  int32_t* lengths_q,
-  void* workspace,
-  cudaStream_t stream)
+{{func_signature}}
 {
 
     /*
@@ -143,6 +82,9 @@ void fused_multihead_attention(void* output,
 
 
     using ArchTag = cutlass::arch::Sm{{arch}};
+    constexpr bool kIs64x64 = {{kIs64x64}};
+    constexpr bool kSingleValueIteration = {{kSingleValueIteration}};
+
     // Set grid size
     constexpr int64_t kQueriesPerBlock = kIs64x64 ? 64 : 32;
     constexpr int64_t kKeysPerBlock = kIs64x64 ? 64 : 128;
@@ -175,8 +117,8 @@ void fused_multihead_attention(void* output,
     // it's safe to mark mem_align to be true to maximize the alignment
     // benefit. Otherwise, assign false to it to use the minimal alignment.
     constexpr const bool mem_align =
-        (kHeadSize % DefaultConfig::kAlignmentA == 0) &&
-        (kHeadSize % DefaultConfig::kAlignmentB == 0);
+        ({{head_size}} % DefaultConfig::kAlignmentA == 0) &&
+        ({{head_size}} % DefaultConfig::kAlignmentB == 0);
     using Attention = AttentionKernel<
         {{elem_input_type}}, // scalar_t
         ArchTag,
@@ -243,52 +185,10 @@ void fused_multihead_attention(void* output,
     }
     kernel_fn<<<p.getBlocksGrid(), p.getThreadsGrid(), smem_bytes, stream>>>(p);
 }
-
-void {{func_name}}(void* output,
-                   void* query,
-                   void* key,
-                   void* value,
-                   int64_t* batch_size,
-                   int64_t* seq_len_kv,
-                   int64_t* seq_len_q,
-                   int num_heads,
-                   int head_size,
-                   int head_size_v,
-                   float p_dropout,
-                   float softmax_scale,
-                   bool is_causal,
-                   bool fixed_seq_length_kv,
-                   int32_t* lengths_kv,
-                   bool fixed_seq_length_q,
-                   int32_t* lengths_q,
-                   void* workspace,
-                   cudaStream_t stream)
-{
-fused_multihead_attention<{{kIs64x64}}, {{kSingleValueIteration}}, {{kHeadSize}}>(output,
-                    query,
-                    key,
-                    value,
-                    batch_size,
-                    seq_len_kv,
-                    seq_len_q,
-                    num_heads,
-                    head_size,
-                    head_size_v,
-                    p_dropout,
-                    softmax_scale,
-                    is_causal,
-                    fixed_seq_length_kv,
-                    lengths_kv,
-                    fixed_seq_length_q,
-                    lengths_q,
-                    workspace,
-                    stream);
-}
-{% endif %}
     """
 )
 
-# TODO: template
+
 FUNC_TEMPLATE_GROUPED_FMHA = jinja2.Template(
     """
 #include <vector>
@@ -730,70 +630,33 @@ using namespace gemm_kernel_utils;
 )
 
 
+FUNC_SIGNATURE = jinja2.Template(
+    """
+void {{func_name}}(void* output,
+                   void* query,
+                   void* key,
+                   void* value,
+                   int64_t* batch_size,
+                   int64_t* seq_len_kv,
+                   int64_t* seq_len_q,
+                   int num_heads,
+                   int head_size,
+                   int head_size_v,
+                   float p_dropout,
+                   float softmax_scale,
+                   bool is_causal,
+                   bool fixed_seq_length_kv,
+                   int32_t* lengths_kv,
+                   bool fixed_seq_length_q,
+                   int32_t* lengths_q,
+                   void* workspace,
+                   cudaStream_t stream)
+    """
+)
+
 FUNC_DECL = jinja2.Template(
     """
-    {% if func_only %}
-    void {{func_name}}(void* output,
-                   void* query,
-                   void* key,
-                   void* value,
-                   int64_t* batch_size,
-                   int64_t* seq_len_kv,
-                   int64_t* seq_len_q,
-                   int num_heads,
-                   int head_size,
-                   int head_size_v,
-                   float p_dropout,
-                   float softmax_scale,
-                   bool is_causal,
-                   bool fixed_seq_length_kv,
-                   int32_t* lengths_kv,
-                   bool fixed_seq_length_q,
-                   int32_t* lengths_q,
-                   void* workspace,
-                   cudaStream_t stream);
-    {% else %}
-    template <bool kIs64x64, bool kSingleValueIteration, int kHeadSize>
-    void fused_multihead_attention(void* output,
-                   void* query,
-                   void* key,
-                   void* value,
-                   int64_t* batch_size,
-                   int64_t* seq_len_kv,
-                   int64_t* seq_len_q,
-                   int num_heads,
-                   int head_size,
-                   int head_size_v,
-                   float p_dropout,
-                   float softmax_scale,
-                   bool is_causal,
-                   bool fixed_seq_length_kv,
-                   int32_t* lengths_kv,
-                   bool fixed_seq_length_q,
-                   int32_t* lengths_q,
-                   void* workspace,
-                   cudaStream_t stream);
-    
-    void {{func_name}}(void* output,
-                   void* query,
-                   void* key,
-                   void* value,
-                   int64_t* batch_size,
-                   int64_t* seq_len_kv,
-                   int64_t* seq_len_q,
-                   int num_heads,
-                   int head_size,
-                   int head_size_v,
-                   float p_dropout,
-                   float softmax_scale,
-                   bool is_causal,
-                   bool fixed_seq_length_kv,
-                   int32_t* lengths_kv,
-                   bool fixed_seq_length_q,
-                   int32_t* lengths_q,
-                   void* workspace,
-                   cudaStream_t stream);
-    {% endif %}
+    {{func_signature}};
     """
 )
 
@@ -830,7 +693,6 @@ def mem_eff_attention_gen_function(func_attrs: Dict[str, Any]) -> str:
         func_attrs["inputs"][0]._attrs["dtype"]
     )
     if func_attrs["use_grouped_fmha"]:
-        raise NotImplementedError("Grouped FMHA not yet supported. TODO: template")
         func_template = FUNC_TEMPLATE_GROUPED_FMHA
     else:
         func_template = FUNC_TEMPLATE_KERNEL_FWD
@@ -838,14 +700,12 @@ def mem_eff_attention_gen_function(func_attrs: Dict[str, Any]) -> str:
     arch = func_attrs["arch"]
     if arch == "90":
         arch = "80"
-    func_only = func_attrs.get("func_only", False)
     return func_template.render(
-        func_only=func_only,
-        func_name=func_attrs["name"],
+        elem_input_type=elem_input_type,
+        head_size=func_attrs["head_size"],
+        func_signature=FUNC_SIGNATURE.render(func_name=func_attrs["name"]),
         kIs64x64="true" if func_attrs["head_size"] <= 64 else "false",
         kSingleValueIteration="true" if func_attrs["head_size"] <= 128 else "false",
-        kHeadSize=func_attrs["head_size"],
-        elem_input_type=elem_input_type,
         cuda_check=CUDA_CHECK,
         arch=arch,
     )
@@ -853,10 +713,8 @@ def mem_eff_attention_gen_function(func_attrs: Dict[str, Any]) -> str:
 
 @registry.reg("cuda.mem_eff_attention.func_decl")
 def mem_eff_attention_gen_function_decl(func_attrs: Dict[str, Any]):
-    func_only = func_attrs.get("func_only", False)
     return FUNC_DECL.render(
-        func_name=func_attrs["name"],
-        func_only=func_only,
+        func_signature=FUNC_SIGNATURE.render(func_name=func_attrs["name"]).strip()
     )
 
 

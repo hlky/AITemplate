@@ -258,28 +258,6 @@ void invoke_{{func_name}}({{output_params}}, {{input_params}}, {{dynamic_dims_de
     """
 )
 
-FUNC_ONLY_TEMPLATE = jinja2.Template(
-    """
-
-{{kernel_function}}
-
-void invoke_{{func_name}}({{output_params}}, {{input_params}}, {{dynamic_dims_decl}} {{offsets_decl}} {{index_type}} n_elements, {{prefix}}Stream_t stream) {
-    if (n_elements == 0) {
-      return;
-    }
-    int block_size = static_cast<int>(std::ceil(static_cast<double>(n_elements) / N_ELEMENTS_PER_THREAD / FUSED_ELE_THREAD_SIZE));
-    {{func_name}}<<<block_size, FUSED_ELE_THREAD_SIZE, 0, stream>>>(
-        {{kernel_call_output_params}},
-        {{kernel_call_input_params}},
-        {{dynamic_dims_call}}
-        {{offsets_call}}
-        n_elements
-    );
-}
-
-    """
-)
-
 FUNC_DECL_TEMPLATE = jinja2.Template(
     """
 void invoke_{{func_name}}({{output_params}}, {{input_params}}, {{dynamic_dims}} {{offsets}} {{index_type}} n_elements, {{prefix}}Stream_t stream);
@@ -1366,81 +1344,44 @@ def fused_elementwise_gen_function(
         data_t=fused_elementwise_metadata.data_t,
     )
 
-    func_only = func_attrs.get("func_only", False)
-    if func_only:
-        function = FUNC_ONLY_TEMPLATE.render(
-            kernel_function=kernel_function,
-            prefix=backend_spec.prefix,
-            index_type=backend_spec.index_type,
-            func_name=func_attrs["name"],
-            output_params=output_params_decl,
-            input_params=input_params_decl,
-            dynamic_dims_decl=gen_dynamic_dim_str(
-                backend_spec.index_type,
-                fused_elementwise_metadata.dynamic_dims,
-                has_type=True,
-            ),
-            dynamic_dims_call=gen_dynamic_dim_str(
-                backend_spec.index_type,
-                fused_elementwise_metadata.dynamic_dims,
-                has_type=False,
-            ),
-            offsets_decl=_gen_offsets_str_from_metadata(
-                fused_elementwise_metadata,
-                has_type=True,
-                # the offsets are passed
-                # by const reference to the function
-                const_ref=True,
-                name="offsets",
-            ),
-            offsets_call=_gen_offsets_str_from_metadata(
-                fused_elementwise_metadata,
-                has_type=False,
-                const_ref=False,
-                name="offsets",
-            ),
-            kernel_call_output_params=kernel_call_output_params,
-            kernel_call_input_params=kernel_call_input_params,
-        )
-    else:
-        function = FUNC_TEMPLATE.render(
-            prefix=backend_spec.prefix,
-            index_type=backend_spec.index_type,
-            head=backend_spec.header_src_template.render(extra_header=head_template),
-            constant=constant,
-            custom_libs=custom_libs,
-            tensor_accessor_lib=tensor_accessor_lib_str,
-            kernel_function=kernel_function,
-            func_name=func_attrs["name"],
-            output_params=output_params_decl,
-            input_params=input_params_decl,
-            dynamic_dims_decl=gen_dynamic_dim_str(
-                backend_spec.index_type,
-                fused_elementwise_metadata.dynamic_dims,
-                has_type=True,
-            ),
-            dynamic_dims_call=gen_dynamic_dim_str(
-                backend_spec.index_type,
-                fused_elementwise_metadata.dynamic_dims,
-                has_type=False,
-            ),
-            offsets_decl=_gen_offsets_str_from_metadata(
-                fused_elementwise_metadata,
-                has_type=True,
-                # the offsets are passed
-                # by const reference to the function
-                const_ref=True,
-                name="offsets",
-            ),
-            offsets_call=_gen_offsets_str_from_metadata(
-                fused_elementwise_metadata,
-                has_type=False,
-                const_ref=False,
-                name="offsets",
-            ),
-            kernel_call_output_params=kernel_call_output_params,
-            kernel_call_input_params=kernel_call_input_params,
-        )
+    function = FUNC_TEMPLATE.render(
+        prefix=backend_spec.prefix,
+        index_type=backend_spec.index_type,
+        head=backend_spec.header_src_template.render(extra_header=head_template),
+        constant=constant,
+        custom_libs=custom_libs,
+        tensor_accessor_lib=tensor_accessor_lib_str,
+        kernel_function=kernel_function,
+        func_name=func_attrs["name"],
+        output_params=output_params_decl,
+        input_params=input_params_decl,
+        dynamic_dims_decl=gen_dynamic_dim_str(
+            backend_spec.index_type,
+            fused_elementwise_metadata.dynamic_dims,
+            has_type=True,
+        ),
+        dynamic_dims_call=gen_dynamic_dim_str(
+            backend_spec.index_type,
+            fused_elementwise_metadata.dynamic_dims,
+            has_type=False,
+        ),
+        offsets_decl=_gen_offsets_str_from_metadata(
+            fused_elementwise_metadata,
+            has_type=True,
+            # the offsets are passed
+            # by const reference to the function
+            const_ref=True,
+            name="offsets",
+        ),
+        offsets_call=_gen_offsets_str_from_metadata(
+            fused_elementwise_metadata,
+            has_type=False,
+            const_ref=False,
+            name="offsets",
+        ),
+        kernel_call_output_params=kernel_call_output_params,
+        kernel_call_input_params=kernel_call_input_params,
+    )
     return function
 
 
