@@ -27,6 +27,7 @@ Header_files = """
 #include <cuda_runtime.h>
 #include "cutlass/cutlass.h"
 #include "cutlass/util/host_tensor.h"
+#include "short_file.h"
 """
 
 
