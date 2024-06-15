@@ -13,6 +13,7 @@
 #  limitations under the License.
 #
 from aitemplate.compiler import ops
+from aitemplate.frontend import Tensor
 from aitemplate.frontend.nn.dropout import Dropout
 from aitemplate.frontend.nn.layer_norm import LayerNorm
 from aitemplate.frontend.nn.module import Module
@@ -41,6 +42,12 @@ class Embedding(Module):
 
     def tensor(self):
         return self.weight.tensor()
+
+    def forward(self, indices: Tensor):
+        # NOTE: flatten in module?
+        assert indices._rank() == 1, "indices should be a 1d-array"
+        embedding = ops.batch_gather()(self.weight.tensor(), indices)
+        return embedding
 
 
 class BertEmbeddings(Module):
