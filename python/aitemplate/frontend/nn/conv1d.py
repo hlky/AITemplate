@@ -47,19 +47,17 @@ class Conv1d(Module):
         dilation: int = 1,
         groups: int = 1,
         dtype: str = "float16",
-        bias: bool = False,
-        name: str = "conv1d",
+        bias: bool = True,
     ):
         super().__init__()
 
         self.weight = Parameter(
             shape=[out_channels, kernel_size, in_channels // groups],
             dtype=dtype,
-            name=f"{name}_weight",
         )
         if bias:
             self.bias = Parameter(
-                shape=[out_channels], dtype=dtype, name=f"{name}_bias"
+                shape=[out_channels], dtype=dtype
             )
         else:
             self.bias = None
