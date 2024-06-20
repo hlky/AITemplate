@@ -15,6 +15,7 @@
 """
 conv3d Module.
 """
+from typing import Tuple, Union
 from aitemplate.compiler.ops import conv3d, conv3d_bias, depthwise_conv3d
 from aitemplate.compiler.ops.padding.ndhwc3to8 import ndhwc3to8
 from aitemplate.frontend.nn.module import Module
@@ -84,15 +85,15 @@ class Conv3d(Module):
 
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding=0,
-        dilation=1,
-        groups=1,
-        dtype="float16",
-        bias=False,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, int, int]],
+        stride: int = 1,
+        padding: int = 0,
+        dilation: int = 1,
+        groups: int = 1,
+        dtype: str = "float16",
+        bias: bool = True,
     ):
         super().__init__()
         self.has_bias = bias
