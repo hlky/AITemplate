@@ -603,15 +603,20 @@ __global__ __launch_bounds__(NUM_THREADS) void group_norm_smem(
   }
 }
 
-template <bool FuseSwish, int H, int W, int C, int num_groups>
+template <bool FuseSwish, int C, int num_groups>
 cudaError_t invokeWelfordGroupNorm_half(
     half* output,
     half* input,
     half* gamma,
     half* beta,
     int N,
+    int64_t* height,
+    int64_t* width,
     const float eps,
     cudaStream_t stream) {
+  int64_t H = *height;
+  int64_t W = *width;
+
   int max_vec_size = 8;
   while ((C / num_groups) % max_vec_size != 0) {
     max_vec_size /= 2;
@@ -622,6 +627,78 @@ cudaError_t invokeWelfordGroupNorm_half(
   const int64_t elems_per_group_channel = C / num_groups;
   const int64_t elems_per_block = (H * W * C) / num_groups;
   const int64_t batch_stride = H * W * C;
+  const int64_t group_stride = elems_per_group_channel;
+
+  CHECK_EQ(elems_per_group_channel % max_vec_size, 0);
+  CHECK_EQ(batch_stride % max_vec_size, 0);
+  CHECK_EQ(group_stride % max_vec_size, 0);
+  const int64_t v_elems_per_group_channel =
+      elems_per_group_channel / max_vec_size;
+  const int64_t v_elems_per_block = elems_per_block / max_vec_size;
+  const int64_t v_batch_stride = batch_stride / max_vec_size;
+  const int64_t v_group_stride = group_stride / max_vec_size;
+  const int64_t v_num_rows = v_elems_per_block / v_elems_per_group_channel;
+  const int64_t v_row_stride = C / max_vec_size;
+
+  dim3 grid(N, num_groups);
+
+#define __HANDLE_ONE_VEC(vec_type, vec_size)           \
+  case vec_size: {                                     \
+    groupnorm_welford_fp16<vec_type, float, FuseSwish> \
+        <<<grid, block_size, 0, stream>>>(             \
+            reinterpret_cast<vec_type*>(output),       \
+            reinterpret_cast<vec_type*>(input),        \
+            reinterpret_cast<vec_type*>(gamma),        \
+            reinterpret_cast<vec_type*>(beta),         \
+            eps,                                       \
+            v_elems_per_block,                         \
+            v_elems_per_group_channel,                 \
+            v_batch_stride,                            \
+            v_group_stride,                            \
+            v_num_rows,                                \
+            v_row_stride);                             \
+    GROUP_NORM_CUDA_CHECK_LAUNCH();                    \
+    break;                                             \
+  }
+
+  switch (max_vec_size) {
+    __HANDLE_ONE_VEC(uint4, 8)
+    __HANDLE_ONE_VEC(uint2, 4)
+    __HANDLE_ONE_VEC(unsigned, 2)
+    __HANDLE_ONE_VEC(half, 1)
+    default:
+      throw std::runtime_error("Invalid max_vec_size\n");
+  }
+
+#undef __HANDLE_ONE_VEC
+  return cudaSuccess;
+}
+
+template <bool FuseSwish, int C, int num_groups>
+cudaError_t invokeWelfordGroupNorm_half(
+    half* output,
+    half* input,
+    half* gamma,
+    half* beta,
+    int N,
+    int64_t* depth,
+    int64_t* height,
+    int64_t* width,
+    const float eps,
+    cudaStream_t stream) {
+  int64_t D = *depth;
+  int64_t H = *height;
+  int64_t W = *width;
+
+  int max_vec_size = 8;
+  while ((C / num_groups) % max_vec_size != 0) {
+    max_vec_size /= 2;
+  }
+
+  constexpr int64_t block_size = 1024;
+  const int64_t elems_per_group_channel = C / num_groups;
+  const int64_t elems_per_block = (D * H * W * C) / num_groups;
+  const int64_t batch_stride = D * H * W * C;
   const int64_t group_stride = elems_per_group_channel;
 
   CHECK_EQ(elems_per_group_channel % max_vec_size, 0);

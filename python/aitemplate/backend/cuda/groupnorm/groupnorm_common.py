@@ -31,10 +31,9 @@ cudaError_t {{func_name}}(void* output,
                           void* gamma,
                           void* beta,
                           int N,
+                          {{depth}}
                           int64_t* H,
                           int64_t* W,
-                          int64_t* HO,
-                          int64_t* WO,
                           const float eps,
                           const int max_smem_size,
                           void* workspace,
@@ -53,8 +52,7 @@ FUNC_CALL_TEMPLATE = jinja2.Template(
 {{indent}}{
 {{indent}}  {{func_name}}(
 {{indent}}     {{output}}, {{input}}, {{gamma}}, {{beta}}, {{N}},
-{{indent}}     {{H}}, {{W}},
-{{indent}}     {{HO}}, {{WO}},
+{{indent}}     {{D}} {{H}}, {{W}},
 {{indent}}     {{eps}}, max_smem_size_, global_workspace_,
 {{indent}}  stream /* default stream */
 {{indent}}  );
@@ -93,19 +91,16 @@ namespace {
 
 {{func_signature}}
 {
-    *HO = *H;
-    *WO = *W;
-    return invokeGroupNorm<{{elem_input_type}}, {{FuseSwish}}, {{C}}, {{G}}>(
+    return invokeWelfordGroupNorm_half<{{FuseSwish}}, {{C}}, {{G}}>(
             static_cast<{{elem_input_type}}*>(output),
             static_cast<{{elem_input_type}}*>(input),
             static_cast<{{elem_input_type}}*>(gamma),
             static_cast<{{elem_input_type}}*>(beta),
             N,
+            {{depth}}
             H,
             W,
             eps,
-            max_smem_size,
-            workspace,
             stream);
 }
     """
@@ -146,8 +141,9 @@ def get_input_names(func_attrs: Dict[str, Any]) -> List[str]:
 def groupnorm_gen_function(func_attrs: Dict[str, Any]) -> str:
     use_swish = True if "swish" in func_attrs["name"] else False
     input_shape = func_attrs["inputs"][0].shape()
+    has_depth = len(input_shape) == 5
 
-    C = input_shape[3].value()
+    C = input_shape[-1].value()
     G = func_attrs["num_groups"]
 
     backend_spec = CUDASpec()
@@ -161,17 +157,25 @@ def groupnorm_gen_function(func_attrs: Dict[str, Any]) -> str:
         custom_libs=Target.current().get_custom_libs(
             os.path.dirname(__file__), "groupnorm_kernel.cuh"
         ),
-        func_signature=FUNC_SIGNATURE.render(func_name=func_attrs["name"]),
+        func_signature=FUNC_SIGNATURE.render(
+            func_name=func_attrs["name"], depth="int64_t* D," if has_depth else ""
+        ),
         elem_input_type=elem_input_type,
         FuseSwish="true" if use_swish else "false",
         C=C,
         G=G,
+        depth="D," if has_depth else "",
     )
 
 
 def groupnorm_gen_func_decl(func_attrs: Dict[str, Any]) -> str:
+    input_shape = func_attrs["inputs"][0].shape()
+    has_depth = len(input_shape) == 5
+
     return FUNC_DECL.render(
-        func_signature=FUNC_SIGNATURE.render(func_name=func_attrs["name"]).strip()
+        func_signature=FUNC_SIGNATURE.render(
+            func_name=func_attrs["name"], depth="int64_t* D," if has_depth else ""
+        ).strip()
     )
 
 
@@ -185,7 +189,8 @@ def groupnorm_gen_func_call(func_attrs: Dict[str, Any], indent="  ") -> str:
     output_name = func_attrs["outputs"][0]._attrs["name"]
     (input_name, gamma_name, beta_name) = get_input_names(func_attrs)
     input_shape = func_attrs["inputs"][0]._attrs["shape"]
-    output_shape = func_attrs["outputs"][0]._attrs["shape"]
+    has_depth = len(input_shape) == 5
+
     eps = func_attrs["eps"]
     return FUNC_CALL_TEMPLATE.render(
         func_name=func_attrs["name"],
@@ -194,10 +199,9 @@ def groupnorm_gen_func_call(func_attrs: Dict[str, Any], indent="  ") -> str:
         gamma=gamma_name,
         beta=beta_name,
         N=input_shape[0]._attrs["name"],
-        H="&" + input_shape[1]._attrs["name"],
-        W="&" + input_shape[2]._attrs["name"],
-        HO="&" + output_shape[1]._attrs["name"],
-        WO="&" + output_shape[2]._attrs["name"],
+        D="&" + input_shape[1]._attrs["name"] + "," if has_depth else "",
+        H="&" + input_shape[-3]._attrs["name"],
+        W="&" + input_shape[-2]._attrs["name"],
         eps=eps,
         indent=indent,
     )

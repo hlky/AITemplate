@@ -136,9 +136,9 @@ class group_norm(Operator):
             dtype="",
             div="//",
             x_dim0=x[0],
-            x_dim1=x[1],
-            x_dim2=x[2],
-            x_dim3=x[3],
+            x_dim1=x[-3],
+            x_dim2=x[-2],
+            x_dim3=x[-1],
         )
         output = {}
         exec(eval_func, output)  # noqa: P204
@@ -148,31 +148,6 @@ class group_norm(Operator):
             int(output["WO"]),
             int(output["CO"]),
         ]
-
-    def _infer_shapes_v2(self, x: Tensor):
-        x_shape_values = [var._attrs["values"] for var in x._attrs["shape"]]
-        x_shapes = itertools.product(*x_shape_values)
-        # run infershape for each
-        y_shapes = []
-        for x_shape in x_shapes:
-            y_shape = self._infer_shape(x_shape)
-            y_shapes.append(y_shape)
-
-        def unique(vector):
-            return sorted(set(vector))
-
-        output_shape = [
-            x.shape()[0],
-            shape_utils.gen_int_var(unique([d[1] for d in y_shapes])),
-            shape_utils.gen_int_var(unique([d[2] for d in y_shapes])),
-            shape_utils.gen_int_var(unique([d[3] for d in y_shapes])),
-        ]
-
-        in_h = x._attrs["shape"][1]._attrs["symbolic_value"]
-        in_w = x._attrs["shape"][2]._attrs["symbolic_value"]
-        output_shape[1]._attrs["symbolic_value"] = in_h
-        output_shape[2]._attrs["symbolic_value"] = in_w
-        return output_shape
 
     def __call__(
         self,
@@ -433,11 +408,11 @@ class group_norm(Operator):
         n_max = max(n_dim._attrs["values"])
         n_min = min(n_dim._attrs["values"])
 
-        h_dim = self._attrs["inputs"][0]._attrs["shape"][1]
+        h_dim = self._attrs["inputs"][0]._attrs["shape"][-3]
         assert isinstance(h_dim, IntImm), "groupnorm requires h_dim to be static"
-        w_dim = self._attrs["inputs"][0]._attrs["shape"][2]
+        w_dim = self._attrs["inputs"][0]._attrs["shape"][-2]
         assert isinstance(w_dim, IntImm), "groupnorm requires w_dim to be static"
-        c_dim = self._attrs["inputs"][0]._attrs["shape"][3]
+        c_dim = self._attrs["inputs"][0]._attrs["shape"][-1]
         assert isinstance(c_dim, IntImm), "groupnorm requires c_dim to be static"
 
         # N, H, W, G, C
