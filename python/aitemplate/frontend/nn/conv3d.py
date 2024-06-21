@@ -16,6 +16,7 @@
 conv3d Module.
 """
 from typing import Tuple, Union
+
 from aitemplate.compiler.ops import conv3d, conv3d_bias, depthwise_conv3d
 from aitemplate.compiler.ops.padding.ndhwc3to8 import ndhwc3to8
 from aitemplate.frontend.nn.module import Module
@@ -127,8 +128,8 @@ class Conv3d(Module):
         x = args[0]
 
         if self.has_bias:
-            x = ndhwc3to8()(x)
-            weight = ndhwc3to8()(self.weight.tensor())
-            return self.op(x, weight, self.bias.tensor())
+            # NOTE: why was ndhwc3to8 applied here?
+            # TODO: further testing
+            return self.op(x, self.weight.tensor(), self.bias.tensor())
         else:
             return self.op(x, self.weight.tensor())
