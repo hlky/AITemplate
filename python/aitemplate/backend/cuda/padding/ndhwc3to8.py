@@ -79,6 +79,7 @@ SRC_TEMPLATE = jinja2.Template(
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
 #include "cutlass/util/host_tensor.h"
+#include "short_file.h"
 
 // load 128 bit every time (n ElemT = 4 float)
 // use as many as thread with factor of 3:
