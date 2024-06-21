@@ -910,9 +910,7 @@ class Model:
         self.torch_constant_tensors[name] = tensor
         self.set_constant(name, torch_to_ait_data(tensor))
 
-    def get_input_maximum_shape(
-        self, input_idx_or_name: Union[int, str]
-    ) -> List[int]:
+    def get_input_maximum_shape(self, input_idx_or_name: Union[int, str]) -> List[int]:
         """
         Get the maximum input shape. The input here can either be an input name
         or an index. The index is the runtime's internal index (as specified by
@@ -952,7 +950,6 @@ class Model:
             self.handle, index, ctypes.byref(input)
         )
         return input.value
-
 
     def get_output_maximum_shape(
         self, output_idx_or_name: Union[int, str]

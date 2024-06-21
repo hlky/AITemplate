@@ -69,6 +69,7 @@ _DTYPE_TO_TORCH_DTYPE = {
     "bfloat16": torch.bfloat16,
 }
 
+
 def get_dtype_size(dtype: str) -> int:
     """Returns size (in bytes) of the given dtype str.
 

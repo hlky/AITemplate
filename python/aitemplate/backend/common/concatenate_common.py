@@ -712,7 +712,9 @@ def gen_function(
     elems_per_iter = max(strides) if len(strides) > 0 else 0
     threads_per_block = 1024
     # minimal number of elems per thread is 8, max is 480
-    elems_per_thread = 480 #min(480, (int((elems_per_iter / threads_per_block + 8) / 8) * 8))
+    elems_per_thread = (
+        480  # min(480, (int((elems_per_iter / threads_per_block + 8) / 8) * 8))
+    )
 
     input_accessors = []
     input_accessor_refs = []

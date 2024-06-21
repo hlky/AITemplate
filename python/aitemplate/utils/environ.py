@@ -23,8 +23,10 @@ from typing import Optional
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def is_windows() -> bool:
     return sys.platform == "win32"
+
 
 def get_compiler_opt_level() -> str:
     # The reason: it is typical in our situation that an option

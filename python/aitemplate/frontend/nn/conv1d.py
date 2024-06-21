@@ -56,9 +56,7 @@ class Conv1d(Module):
             dtype=dtype,
         )
         if bias:
-            self.bias = Parameter(
-                shape=[out_channels], dtype=dtype
-            )
+            self.bias = Parameter(shape=[out_channels], dtype=dtype)
         else:
             self.bias = None
 

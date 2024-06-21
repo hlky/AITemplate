@@ -13,15 +13,21 @@
 #  limitations under the License.
 #
 
-from ..compiler.model import Model
-from ..compiler.dtype import _ENUM_TO_TORCH_DTYPE
-
 from typing import Optional
 
 import torch
 
+from ..compiler.dtype import _ENUM_TO_TORCH_DTYPE
+from ..compiler.model import Model
 
-def benchmark_module(module: Model, device: str = "cuda", count: int = 25, repeat: int = 2, graph_mode: bool = False):
+
+def benchmark_module(
+    module: Model,
+    device: str = "cuda",
+    count: int = 25,
+    repeat: int = 2,
+    graph_mode: bool = False,
+):
     inputs = {}
     outputs = {}
     for name, idx in module.get_input_name_to_index_map().items():
@@ -34,7 +40,9 @@ def benchmark_module(module: Model, device: str = "cuda", count: int = 25, repea
         dtype = _ENUM_TO_TORCH_DTYPE[module.get_output_dtype(idx)]
         tensor = torch.empty(*shape, dtype=dtype).to(device)
         outputs[name] = tensor
-    mean, std, _ = module.benchmark_with_tensors(inputs, outputs, count=count, repeat=repeat, graph_mode=graph_mode)
+    mean, std, _ = module.benchmark_with_tensors(
+        inputs, outputs, count=count, repeat=repeat, graph_mode=graph_mode
+    )
     print(f"Mean: {mean:.3f} ms, Std: {std:.3f} ms")
     return mean, std
 
