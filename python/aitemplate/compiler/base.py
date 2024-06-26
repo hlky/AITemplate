@@ -300,6 +300,15 @@ class IntVar(Node):
 
         return IntVar(values=new_values, symbolic_value=new_sym)
 
+    def __mod__(self, other: int):
+        if not isinstance(other, int):
+            raise NotImplementedError("IntVar modulo only supports int.")
+        self_values = self._attrs["values"]
+        result = 0
+        for value in self_values:
+            result = value % other
+        return result
+
     def lower_bound(self) -> int:
         """Returns lower bound of this dynamic dim."""
         return self._attrs["values"][0]
