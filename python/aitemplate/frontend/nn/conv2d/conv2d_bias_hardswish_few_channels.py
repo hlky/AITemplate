@@ -29,7 +29,7 @@ class Conv2dBiasHardswishFewChannels(SpecialConv2dBiasAct):
         in_channels,
         out_channels,
         kernel_size,
-        stride,
+        stride=1,
         padding=0,
         dilation=1,
         auto_padding=True,

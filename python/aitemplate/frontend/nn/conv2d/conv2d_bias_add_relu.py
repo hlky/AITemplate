@@ -45,7 +45,7 @@ class Conv2dBiasAddRelu(Conv2dBiasAddAct):
         in_channels,
         out_channels,
         kernel_size,
-        stride,
+        stride=1,
         padding=0,
         dilation=1,
         groups=1,
