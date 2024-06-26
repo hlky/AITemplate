@@ -65,8 +65,26 @@ class where(Operator):
                 assert isinstance(
                     tensor, Tensor
                 ), f"Unsupported data type: {type(tensor)}"
+                exact_match = tensor.shape() == output_shape
+                near_match = all(
+                    [
+                        (dim._attrs["values"] == output_shape[idx]._attrs["values"])
+                        or (
+                            all([value == 1 for value in dim._attrs["values"]])
+                            and all(
+                                [
+                                    value == 1
+                                    for value in output_shape[idx]._attrs["values"]
+                                ]
+                            )
+                        )
+                        for idx, dim in enumerate(tensor.shape())
+                    ]
+                )
+                if not exact_match and near_match:
+                    exact_match = near_match
                 assert (
-                    tensor.shape() == output_shape
+                    exact_match
                 ), f"Tensor shape should be the same, {tensor.shape()} != {output_shape}"
                 if common_dtype is None:
                     common_dtype = normalize_dtype(tensor.dtype())
