@@ -75,6 +75,9 @@ def get_broadcast_max_shape(shape1, shape2):
         if dim1 == dim2:
             res_shape[idx] = dim1
             continue
+        if dim1._attrs["values"] == dim2._attrs["values"]:
+            res_shape[idx] = dim1
+            continue
         if dim1 == IntImm(1):
             res_shape[idx] = dim2
         elif dim2 == IntImm(1):
