@@ -366,7 +366,12 @@ class layernorm(Operator):
             algo=best_algo,
             workspace=workspace,
         )
-        Target.current().insert_profile_cache("normalization", cache_record.__dict__)
+        try:
+            Target.current().insert_profile_cache(
+                "normalization", cache_record.__dict__
+            )
+        except Exception as e:
+            _LOGGER.warning(e)
         return (best_algo, workspace)
 
     def profile(

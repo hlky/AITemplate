@@ -668,8 +668,11 @@ class ProfileCacheDB:
         """
         if self._mode == CacheMode.LOCAL:
             if self._db_commit_flag:
-                self._con.commit()
-                self._db_commit_flag = False
+                try:
+                    self._con.commit()
+                    self._db_commit_flag = False
+                except Exception as e:
+                    _LOGGER.warn(e)
             self._cur.execute(sql)
             out = self._cur.fetchall()
             if len(out) == 0:
@@ -919,5 +922,8 @@ class ProfileCacheDB:
         self._insert(query_sql, insert_sql)
 
     def __del__(self):
-        self._con.commit()
-        self._con.close()
+        try:
+            self._con.commit()
+            self._con.close()
+        except Exception as e:
+            _LOGGER.warn(e)

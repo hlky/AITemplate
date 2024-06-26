@@ -514,7 +514,10 @@ class conv2d(Operator):
             exec_entry_sha1=exec_entry_sha1,
             **self._get_params_factory(),
         )
-        cache_value = target.query_profile_cache("conv", query.__dict__)
+        try:
+            cache_value = target.query_profile_cache("conv", query.__dict__)
+        except Exception as e:
+            _LOGGER.warn(e)
         if cache_value is not None and not target.force_profile():
             _LOGGER.info("Load profiling result from cache.")
             return cache_value
@@ -571,7 +574,10 @@ class conv2d(Operator):
             split_k=split_k,  # todo add into profile
             **self._get_params_factory(),
         )
-        Target.current().insert_profile_cache("conv", cache_record.__dict__)
+        try:
+            Target.current().insert_profile_cache("conv", cache_record.__dict__)
+        except Exception as e:
+            _LOGGER.warning(e)
         return (best_algo, workspace)
 
     def _has_dynamic_input_dims(self):

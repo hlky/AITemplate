@@ -571,7 +571,10 @@ class conv3d(Operator):
             workspace=workspace,
             split_k=split_k,  # todo add into profile
         )
-        Target.current().insert_profile_cache("conv3d", cache_record.__dict__)
+        try:
+            Target.current().insert_profile_cache("conv3d", cache_record.__dict__)
+        except Exception as e:
+            _LOGGER.warning(e)
         return (best_algo, workspace)
 
     def _has_dynamic_input_dims(self):
