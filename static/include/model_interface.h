@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#include <array>
 
 // We compile all models with -fvisibility=hidden. Any symbols that need to be
 // exposed in the final shared library must be declared with AIT_EXPORT to make
