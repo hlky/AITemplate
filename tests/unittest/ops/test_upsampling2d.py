@@ -35,6 +35,7 @@ class UpsamplingTestCase(unittest.TestCase):
         self,
         scale_factor=2.0,
         mode="bilinear",
+        align_corners=False,
         batch_size=_DEFAULT_BATCH_SIZE,
         test_name="bilinear_upsampling2d_fp16",
         dtype="float16",
@@ -48,7 +49,7 @@ class UpsamplingTestCase(unittest.TestCase):
             name="input_0",
             is_input=True,
         )
-        OP = nn.Upsampling2d(scale_factor=scale_factor, mode=mode)
+        OP = nn.Upsampling2d(scale_factor=scale_factor, mode=mode, align_corners=align_corners)
         Y = OP(X)
         Y._attrs["name"] = "output_0"
         Y._attrs["is_output"] = True
@@ -57,13 +58,19 @@ class UpsamplingTestCase(unittest.TestCase):
         for b in batch_size:
             X_pt = get_random_torch_tensor([b, channels, HH, WW], dtype=dtype)
             Y_pt = torch.nn.functional.interpolate(
-                X_pt, scale_factor=scale_factor, mode=mode
+                X_pt, scale_factor=scale_factor, mode=mode, align_corners=align_corners
             )
             x = torch.permute(X_pt, (0, 2, 3, 1)).contiguous()
             y = torch.empty_like(Y_pt).permute((0, 2, 3, 1)).contiguous()
             module.run_with_tensors([x], [y])
             y_transpose = torch.permute(y, (0, 3, 1, 2))
-            self.assertTrue(torch.allclose(Y_pt, y_transpose, atol=1e-2, rtol=1e-2))
+            torch.testing.assert_close(
+                y_transpose,
+                Y_pt.to(y.dtype),
+                rtol=1e-3,
+                atol=1e-3,
+                msg=lambda msg: f"{msg}\n\n{test_name}\npt ({Y_pt.shape}):\n{Y_pt}\n\nait ({y_transpose.shape}):\n{y_transpose}\n\n",
+            )
 
     @parameterized.expand(
         **filter_test_cases_by_params(
@@ -83,9 +90,24 @@ class UpsamplingTestCase(unittest.TestCase):
                 test_name=f"bilinear_upsampling2d_{ait_dtype}",
                 dtype=ait_dtype,
             )
+            self._test_single_op(
+                scale_factor=2.0,
+                mode="bilinear",
+                align_corners=True,
+                test_name=f"bilinear_align_corners_upsampling2d_{ait_dtype}",
+                dtype=ait_dtype,
+            )
+        self._test_single_op(
+            scale_factor=2.0,
+            mode="nearest-exact",
+            align_corners=None,
+            test_name=f"nearest-exact_upsampling2d_{ait_dtype}",
+            dtype=ait_dtype,
+        )
         self._test_single_op(
             scale_factor=2.0,
             mode="nearest",
+            align_corners=None,
             test_name=f"nearest_upsampling2d_{ait_dtype}",
             dtype=ait_dtype,
         )

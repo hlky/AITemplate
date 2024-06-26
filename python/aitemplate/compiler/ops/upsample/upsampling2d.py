@@ -35,7 +35,7 @@ class upsampling2d(upsampling2d_base):
         Tensor [N, H_out, W_out, C].
     """
 
-    def __init__(self, scale_factor, mode) -> None:
-        super().__init__(scale_factor, mode)
+    def __init__(self, scale_factor, mode, align_corners=False) -> None:
+        super().__init__(scale_factor, mode, align_corners)
         self._attrs["op"] = "upsampling2d"
         self._attrs["mode"] = mode

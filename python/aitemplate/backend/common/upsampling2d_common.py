@@ -68,8 +68,14 @@ __global__ void bilinear_upsampling_nhwc_kernel(const {{dtype}}* input_raw,
 {% endif %}
   {{vec_dtype}}* output = ({{vec_dtype}}*)output_raw;
 
+  {% if align_corners %}
+  const float height_scale = in_height == 1 ? 0.0f : (float)(in_height - 1) / (out_height - 1);
+  const float width_scale = in_width == 1 ? 0.0f : (float)(in_width - 1) / (out_width - 1);
+  {% else %}
   const float height_scale = in_height / static_cast<float>(out_height);
   const float width_scale = in_width / static_cast<float>(out_width);
+  {% endif %}
+  
   const int64_t num_threads = out_height * out_width * channels * batch;
 
 GPU_1D_KERNEL_LOOP(out_idx, num_threads) {
@@ -81,13 +87,21 @@ GPU_1D_KERNEL_LOOP(out_idx, num_threads) {
     const int64_t y = idx % out_height;
     const int64_t b = idx / out_height;
 
+    {% if align_corners %}
+    const float in_y = y * height_scale;
+    {% else %}
     const float in_y = (static_cast<float>(y) + 0.5f) * height_scale - 0.5f;
+    {% endif %}
     const int64_t top_y_index = in_y > 0.0 ? floorf(in_y) : 0;
     const int64_t bottom_y_index =
         (in_y < in_height - 1) ? ceilf(in_y) : in_height - 1;
     const float y_lerp = in_y - floorf(in_y);
 
+    {% if align_corners %}
+    const float in_x = x * width_scale;
+    {% else %}
     const float in_x = (static_cast<float>(x) + 0.5f) * width_scale - 0.5f;
+    {% endif %}
     const int64_t left_x_index = in_x > 0.0 ? floorf(in_x) : 0;
     const int64_t right_x_index =
         (in_x < in_width - 1) ? ceilf(in_x) : in_width - 1;
@@ -175,12 +189,20 @@ GPU_1D_KERNEL_LOOP(index, nthreads) {
     const T* bottom_data_n = input + n * channels * in_height * in_width;
     const int in_y =
         max(min(static_cast<int>(
+                    {% if mode == "nearest-exact"%}
                     floorf((static_cast<float>(out_y) + 0.5f) * height_scale)),
+                    {% else %}
+                    floorf((static_cast<float>(out_y)) * height_scale)),
+                    {% endif %}
                 static_cast<int>(in_height) - 1),
             0);
     const int in_x =
         max(min(static_cast<int>(
+                    {% if mode == "nearest-exact"%}
                     floorf((static_cast<float>(out_x) + 0.5f) * width_scale)),
+                    {% else %}
+                    floorf((static_cast<float>(out_x)) * width_scale)),
+                    {% endif %}
                 static_cast<int>(in_width) - 1),
             0);
     const int idx = (in_y * in_width + in_x) * channels + c;

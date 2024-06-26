@@ -87,6 +87,7 @@ def gen_function(
         half2_data_ref=half2_data_ref,
         mode=func_attrs["mode"],
         tsize=upsampling2d_common.gen_alignment(x),
+        align_corners=func_attrs["align_corners"],
         dtype=input_type,
     )
 

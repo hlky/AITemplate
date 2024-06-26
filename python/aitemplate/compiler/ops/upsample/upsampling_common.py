@@ -81,8 +81,8 @@ class upsampling2d_base(Operator):
     * :attr:`scale_factor` (float): multiplier for spatial size.
 
     * :attr:`mode` (str): the upsampling algorithm: one of ``'nearest'``,
-      ``'linear'``, ``'bilinear'``, ``'bicubic'`` and ``'trilinear'``.
-      Currently we support ``'bilinear'`` and  ``'nearest'`` mode.
+      ``'nearest-exact'``, ``'linear'``, ``'bilinear'``, ``'bicubic'`` and ``'trilinear'``.
+      Currently we support ``'bilinear'``,  ``'nearest-exact'`` and ``'nearest'`` mode.
 
     Args:
         input (Tensor [N, H, W, C]): the input data.
@@ -91,10 +91,11 @@ class upsampling2d_base(Operator):
         Tensor [N, H_out, W_out, C].
     """
 
-    def __init__(self, scale_factor, mode) -> None:
+    def __init__(self, scale_factor, mode, align_corners=False) -> None:
         super().__init__()
         self._attrs["op"] = "upsampling2d"
         self._attrs["scale_factor"] = scale_factor
+        self._attrs["align_corners"] = align_corners
         self._attrs["mode"] = mode
         self._attrs["out_shape"] = False
         self.shape_eval_template = SHAPE_FUNC_TEMPLATE

@@ -39,9 +39,9 @@ class Upsampling2d(Module):
         Tensor [N, H_out, W_out, C].
     """
 
-    def __init__(self, scale_factor, mode):
+    def __init__(self, scale_factor, mode, align_corners=False):
         super().__init__()
-        self.op = upsampling2d(scale_factor, mode)
+        self.op = upsampling2d(scale_factor, mode, align_corners)
 
     def forward(self, *args):
         out = None
@@ -54,9 +54,9 @@ class Upsampling2d(Module):
 class Upsampling2dAdd(Module):
     r"""Applies Upsampling2d + add."""
 
-    def __init__(self, scale_factor, mode):
+    def __init__(self, scale_factor, mode, align_corners=False):
         super().__init__()
-        self.op = upsampling2d_add(scale_factor, mode)
+        self.op = upsampling2d_add(scale_factor, mode, align_corners)
 
     def forward(self, *args):
         assert len(args) == 2
