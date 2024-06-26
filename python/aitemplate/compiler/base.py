@@ -126,7 +126,7 @@ class IntVar(Node):
         super().__init__()
         self._attrs["name"] = name
 
-        if values is None or len(values) < 2:
+        if values is None:
             raise RuntimeError(
                 "IntVar 'values' field must have at least 2 values! values: {}, name: {}".format(
                     values, name
