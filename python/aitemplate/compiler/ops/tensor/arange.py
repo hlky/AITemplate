@@ -21,6 +21,8 @@ class arange(Operator):
         self._attrs["step"] = step if isinstance(step, IntVar) else IntVar([step])
 
     def __call__(self) -> Tensor:
+        self._attrs["inputs"] = []
+        self._set_depth()
         output_shape = self._infer_shape()
         output = Tensor(output_shape, src_ops={self})
         self._attrs["outputs"] = [output]
