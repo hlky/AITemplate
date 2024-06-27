@@ -264,9 +264,11 @@ def extract_input_output_shapes(func_attrs):
             for acc in func_attrs["input_accessors"]
         ]
     else:
-        input_shape = [
-            [v.pseudo_code() for v in t.shape()] for t in func_attrs["inputs"]
-        ]
+        input_shape = (
+            [[v.pseudo_code() for v in t.shape()] for t in func_attrs["inputs"]]
+            if func_attrs["inputs"] is not None
+            else []
+        )
 
     if "output_accessors" in func_attrs:
         output_shape = [

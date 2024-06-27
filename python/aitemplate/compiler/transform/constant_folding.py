@@ -114,7 +114,10 @@ def _fix_op_inputs_outputs(
     ops = graph_utils.get_sorted_ops(subgraph)
     for op in ops:
         op._attrs["inputs"] = [
-            name_to_new_tensor[tensor._attrs["name"]] for tensor in op._attrs["inputs"]
+            name_to_new_tensor[tensor._attrs["name"]]
+            for tensor in (
+                op._attrs["inputs"] if op._attrs["inputs"] is not None else []
+            )
         ]
 
         op._attrs["outputs"] = [
@@ -157,7 +160,7 @@ def _extract_foldable_subgraph(
         foldable = all(
             inp._attrs["name"] in foldable_node_names
             for op in tensor._attrs["src_ops"]
-            for inp in op._attrs["inputs"]
+            for inp in (op._attrs["inputs"] if op._attrs["inputs"] is not None else [])
         )
 
         if foldable:

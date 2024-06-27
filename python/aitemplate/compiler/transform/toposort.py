@@ -65,6 +65,8 @@ def _dfsSort(nodes: Union[Tensor, List[Tensor]]) -> List[Tensor]:
         stack.append((curr_node, True))
         for src_op in curr_node.src_ops():
             args = src_op._attrs["inputs"]
+            if args is None:
+                continue
             indexed_args = list(enumerate(args))
             depth_first_args = sorted(
                 indexed_args, key=lambda x: x[1]._attrs["depth"], reverse=True
@@ -123,6 +125,8 @@ def _priSort(
     for node in nodes:
         in_degree[node] = 0
         for src_op in node.src_ops():
+            if src_op._attrs["inputs"] is None:
+                break
             # sometimes it'd have 2 same nodes in one list
             # change to set to de-dupe these nodes
             in_degree[node] += len(set(src_op._attrs["inputs"]))

@@ -71,7 +71,12 @@ def _make_tensor_usage_records(sorted_ops: List[Operator]) -> List[TensorUsageRe
         )
     )
     for op_idx, op in enumerate(sorted_ops):
-        for tensor in op._attrs["inputs"] + op._attrs["outputs"]:
+        tensors = (
+            op._attrs["inputs"] + op._attrs["outputs"]
+            if op._attrs["inputs"] is not None
+            else op._attrs["outputs"]
+        )
+        for tensor in tensors:
             # Skip weights and inputs since we don't overwrite them.
             # Note that it might be OK to overwrite inputs, but let's be
             # consertative for now and not surprise users. We could always

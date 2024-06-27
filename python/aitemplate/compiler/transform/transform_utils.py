@@ -43,7 +43,7 @@ def check_graph_validity(sorted_graph: List[Tensor], raiseError: bool = False) -
     def handleError(msg: str):
         if raiseError:
             _LOGGER.info("check_graph_validity() error! Graph:")
-            _LOGGER.info(graph_utils.sorted_graph_debug_str(sorted_graph))
+            # _LOGGER.info(graph_utils.sorted_graph_debug_str(sorted_graph))
             raise RuntimeError(msg)
         else:
             return False
@@ -56,7 +56,9 @@ def check_graph_validity(sorted_graph: List[Tensor], raiseError: bool = False) -
             if op is None:
                 continue
             oname = op._attrs.get("name", None)
-            for input_tensor in op._attrs["inputs"]:
+            for input_tensor in (
+                op._attrs["inputs"] if op._attrs["inputs"] is not None else []
+            ):
                 if not isinstance(input_tensor, Tensor):
                     continue
                 iname = input_tensor._attrs.get("name", None)
@@ -293,7 +295,9 @@ def is_ancestor(op1: Operator, op2: Operator) -> bool:
         if src_op in visited:
             continue
         visited.add(src_op)
-        for tensor in src_op._attrs["inputs"]:
+        for tensor in (
+            src_op._attrs["inputs"] if src_op._attrs["inputs"] is not None else []
+        ):
             if op1 in tensor._attrs["src_ops"]:
                 return True
             src_ops.extend(tensor._attrs["src_ops"])
