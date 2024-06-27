@@ -103,14 +103,14 @@ def dump_graph_debug_str_to_file(tensors, workdir, name, file_with_time_profiles
         with open(graph_path, "w") as f:
             f.write(sorted_graph_debug_str(tensors))
             _LOGGER.debug(f"Dumped {name} graph to {graph_path}")
-        with open(graph_json_path, "w") as f:
-            f.write(sorted_graph_debug_json(tensors))
-            _LOGGER.debug(f"Dumped {name} graph to {graph_json_path}")
+        # with open(graph_json_path, "w") as f:
+        #     f.write(sorted_graph_debug_json(tensors))
+        #     _LOGGER.debug(f"Dumped {name} graph to {graph_json_path}")
         with open(pseudo_code_path, "w") as f:
             f.write(sorted_graph_pseudo_code(tensors))
             _LOGGER.debug(f"Dumped {name} pseudo code to {pseudo_code_path}")
-        plot_graph(tensors, graph_visual_path, file_with_time_profiles)
-        _LOGGER.debug(f"Dumped {name} visualization to {graph_visual_path}")
+        # plot_graph(tensors, graph_visual_path, file_with_time_profiles)
+        # _LOGGER.debug(f"Dumped {name} visualization to {graph_visual_path}")
 
 
 class TimestampTracking:
