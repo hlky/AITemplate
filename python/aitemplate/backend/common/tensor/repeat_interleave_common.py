@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 import jinja2
 from aitemplate.backend.common.elementwise_common import get_stride_expressions
+from aitemplate.frontend import IntVar
 
 KERNEL_TEMPLATE = jinja2.Template(
     """
@@ -126,6 +127,8 @@ def gen_function_call(func_attrs: Dict[str, Any], indent="  ") -> str:
     output_name = func_attrs["outputs"][0]._attrs["name"]
     input_name = func_attrs["inputs"][0]._attrs["name"]
     repeats = func_attrs["repeats"]
+    if isinstance(repeats, IntVar):
+        repeats = repeats._attrs["name"]
     repeat_dim = func_attrs["repeat_dim"]
 
     dim_names = [dim._attrs["name"] for dim in func_attrs["inputs"][0].shape()]
