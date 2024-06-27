@@ -643,7 +643,6 @@ class conv3d(Operator):
 
         # extract dynamic dim from exec_path
         def _extract_dynamic_dim(exec_keys):
-            _LOGGER.info("ONLY SUPPORT DYNAMIC BATCH (dim0)!")
             var_dims = [[], [], [], [], []]
             for key in exec_keys:
                 dims = self._invert_exec_key(key)
@@ -729,7 +728,7 @@ class conv3d(Operator):
                 runner.push(
                     idx=profiler_filename,
                     cmd=profiler_cmd,
-                    return_ops=[str(lb_algo), str(ub_algo)],
+                    return_ops=[str(lb_algo)],
                 )
                 runner.join()
                 result = runner.pull()
@@ -755,6 +754,7 @@ class conv3d(Operator):
                         ub = mid - 1
                 last_mid = mid
                 mid = (lb + ub) // 2
+                break
             lo_region_key = self._gen_dyn_exec_key(
                 origin_lb,
                 last_mid,
