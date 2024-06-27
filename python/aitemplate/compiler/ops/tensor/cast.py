@@ -54,7 +54,7 @@ class cast(Operator):
                 f"Expected dtype for x must be float16,bfloat16 or float32 , but got {x_dtype}."
             )
 
-        if dtype not in ("float16", "bfloat16", "float32"):
+        if dtype not in ("float16", "bfloat16", "float32", "bool"):
             raise TypeError(
                 f"Expected dtype to cast must be float16,bfloat16 or float32 , but got {dtype}."
             )

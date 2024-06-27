@@ -101,14 +101,17 @@ CAST_FUNCS = {
     "half": {
         "bfloat16": "__float2bfloat16_rn(__half2float(input[idx]));",
         "float": "__half2float(input[idx]);",
+        "bool": "__half2float(input[idx]) != 0.0f;",
     },
     "bfloat16": {
         "half": "__float2half_rn(__bfloat162float(input[idx]));",
         "float": "__bfloat162float(input[idx]);",
+        "bool": "__bfloat162float(input[idx]) != 0.0f;",
     },
     "float": {
         "bfloat16": "__float2bfloat16_rn(input[idx]);",
         "half": "__float2half_rn(input[idx]);",
+        "bool": "input[idx] != 0.0f;",
     },
 }
 
