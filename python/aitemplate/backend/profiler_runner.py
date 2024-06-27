@@ -172,7 +172,7 @@ class Runner(BaseRunner):
     Runner is inherited from BaseRunner.
     """
 
-    def __init__(self, devs: List[int], op_name: str, timeout: int = 30):
+    def __init__(self, devs: List[int], op_name: str, timeout: int = 3600):
         _LOGGER.info("Using {n} GPU for profiling {op}".format(n=len(devs), op=op_name))
         super().__init__(devs, op_name, timeout)
         self._dev_flag = Target.current().dev_select_flag()
@@ -256,7 +256,9 @@ class ProfilerRunner:
     however, the results are empirically better compared to the previous runner.
     """
 
-    def __init__(self, devices: List[str], postprocessing_delegate, timeout: int = 500):
+    def __init__(
+        self, devices: List[str], postprocessing_delegate, timeout: int = 3600
+    ):
         """
         Parameters
         ----------

@@ -56,7 +56,7 @@ def profile(
     workdir="./tmp",
     devices=None,
     dynamic_profiling_strategy=DynamicProfileStrategy.MAX,
-    timeout=500,
+    timeout=3600,
 ):
     """Profiles kernels.
 
