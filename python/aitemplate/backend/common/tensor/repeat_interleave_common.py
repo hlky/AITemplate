@@ -6,14 +6,14 @@ from aitemplate.frontend import IntVar
 
 KERNEL_TEMPLATE = jinja2.Template(
     """
-template <typename T, int Rank>
+template <typename T, int64_t Rank>
 __global__ void RepeatInterleaveKernel(
     T* output,
     const T* input,
     const int64_t repeats,
     const int64_t repeat_dim,
-    std::array<int, Rank> out_shape,
-    std::array<int, Rank> in_strides,
+    std::array<int64_t, Rank> out_shape,
+    std::array<int64_t, Rank> in_strides,
     const int64_t numel) {
   int64_t tid = threadIdx.x + blockIdx.x * blockDim.x;
   if (tid < numel) {
@@ -21,7 +21,7 @@ __global__ void RepeatInterleaveKernel(
     int64_t input_idx = 0;
     int64_t factor = 1;
 
-    for (int i = Rank - 1; i >= 0; --i) {
+    for (int64_t i = Rank - 1; i >= 0; --i) {
       int64_t current_dim_idx = (temp_tid / factor) % out_shape[i];
       if (i == repeat_dim) {
         current_dim_idx /= repeats;
@@ -40,8 +40,8 @@ void invoke_repeat_interleave(
     const int64_t repeats,
     const int64_t repeat_dim,
     const int64_t numel,
-    std::array<int, {{rank}}> out_shape,
-    std::array<int, {{rank}}> in_strides,
+    std::array<int64_t, {{rank}}> out_shape,
+    std::array<int64_t, {{rank}}> in_strides,
     {{prefix}}Stream_t stream) {
   if (numel < 1024) {
     dim3 grid(1);
@@ -90,8 +90,8 @@ void {{func_name}}(void* output,
                    const int64_t repeats,
                    const int64_t repeat_dim,
                    const int64_t num_elements,
-                   std::array<int, {{rank}}> out_shape,
-                   std::array<int, {{rank}}> in_strides,
+                   std::array<int64_t, {{rank}}> out_shape,
+                   std::array<int64_t, {{rank}}> in_strides,
                    {{prefix}}Stream_t stream)
     """
 )
@@ -105,16 +105,8 @@ FUNC_DECL = jinja2.Template(
 
 FUNC_CALL_TEMPLATE = jinja2.Template(
     """
-{{indent}}int64_t num_elements = 1;
-{% for dim_name in dim_names %}
-{{indent}}num_elements *= {{dim_name}};
-{% endfor %}
-
-std::array<int, {{rank}}> out_shape = { {% for dim in out_shape %}{{dim}}, {% endfor %} };
-std::array<int, {{rank}}> in_strides = { {% for stride in in_strides %}{{stride}}, {% endfor %} };
-
 {{indent}}{{func_name}}(
-{{indent}}   {{output}}, {{input}}, {{repeats}}, {{repeat_dim}}, num_elements, out_shape, in_strides, stream /* default stream */
+{{indent}}   {{output}}, {{input}}, {{repeats}}, {{repeat_dim}}, {{num_elements}}, { {% for dim in out_shape %}{{dim}}, {% endfor %} }, { {% for stride in in_strides %}{{stride}}, {% endfor %} }, stream /* default stream */
 {{indent}});
     """
 )
@@ -131,19 +123,18 @@ def gen_function_call(func_attrs: Dict[str, Any], indent="  ") -> str:
         repeats = repeats._attrs["name"]
     repeat_dim = func_attrs["repeat_dim"]
 
-    dim_names = [dim._attrs["name"] for dim in func_attrs["inputs"][0].shape()]
     out_shape = [dim._attrs["name"] for dim in func_attrs["outputs"][0].shape()]
     in_strides = get_stride_expressions(func_attrs["inputs"][0].shape()) + ["1"]
+    num_elements = " * ".join(out_shape)
     return FUNC_CALL_TEMPLATE.render(
         func_name=func_attrs["name"],
         output=output_name,
         input=input_name,
         repeats=repeats,
         repeat_dim=repeat_dim,
-        dim_names=out_shape,
         out_shape=out_shape,
         in_strides=in_strides,
-        rank=len(out_shape),
+        num_elements=num_elements,
         indent=indent,
     )
 
