@@ -16,6 +16,7 @@
 CUDA tensor ops module init
 """
 from aitemplate.backend.cuda.tensor import (
+    arange,
     argmax,
     batch_gather,
     cast,
@@ -45,6 +46,7 @@ from aitemplate.backend.cuda.tensor import (
 )
 
 __all__ = [
+    "arange",
     "argmax",
     "batch_gather",
     "cast",
