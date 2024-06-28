@@ -22,6 +22,7 @@ from aitemplate.backend.backend_spec import CUDASpec
 
 
 CUDA_HEADER_FILES = """
+#include <stdint.h>
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
 #include "cutlass/cutlass.h"
