@@ -24,7 +24,7 @@ class arange(Operator):
         self._attrs["inputs"] = []
         self._set_depth()
         output_shape = self._infer_shape()
-        output = Tensor(output_shape, src_ops={self})
+        output = Tensor(output_shape, src_ops={self}, skip_constant_folding=True)
         self._attrs["outputs"] = [output]
         return output
 
