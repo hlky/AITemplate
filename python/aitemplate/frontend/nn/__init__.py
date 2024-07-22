@@ -26,6 +26,7 @@ from aitemplate.frontend.nn.pool1d import *
 from aitemplate.frontend.nn.pool2d import *
 from aitemplate.frontend.nn.fpn_proposal import FPNProposal
 from aitemplate.frontend.nn.proposal import Proposal
+from aitemplate.frontend.nn.pixel_shuffle import *
 from aitemplate.frontend.nn.roi_ops import *
 from aitemplate.frontend.nn.upsample import *
 from aitemplate.frontend.nn.view_ops import *
