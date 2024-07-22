@@ -157,9 +157,7 @@ class ConvTestCase(unittest.TestCase):
         Y._attrs["name"] = "output_0"
         Y._attrs["is_output"] = True
         module = compile_model(Y, target, "./tmp", test_name)
-        module.set_constant_with_tensor(
-            "weight", W_pt.permute((0, 2, 1)).contiguous()
-        )
+        module.set_constant_with_tensor("weight", W_pt.permute((0, 2, 1)).contiguous())
         if bias:
             module.set_constant_with_tensor("bias", bias_pt)
         Y_pt = torch.nn.functional.conv1d(

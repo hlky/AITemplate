@@ -36,6 +36,7 @@ def verify_repeat_interleave_rank2():
             msg=lambda msg: f"{msg}\n\npt ({y_pt.shape}):\n{y_pt}\n\nait ({y.shape}):\n{y}\n\n",
         )
 
+
 def verify_repeat_interleave_rank3():
     shapes = [2, 33, 768]
     repeats = 3
@@ -67,11 +68,12 @@ def verify_repeat_interleave_rank3():
             msg=lambda msg: f"{msg}\n\npt ({y_pt.shape}):\n{y_pt}\n\nait ({y.shape}):\n{y}\n\n",
         )
 
+
 def verify_repeat_interleave_rank4():
     shapes = [1, 4, 64, 64]
     b, c, h, w = shapes
     repeats = 2
-    repeat_dim = 2 # h
+    repeat_dim = 2  # h
     repeat_dim_ait = 1
     x = torch.randn(shapes).cuda().half()
     x_ait = x.clone().permute(0, 2, 3, 1).contiguous()

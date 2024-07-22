@@ -49,7 +49,9 @@ class UpsamplingTestCase(unittest.TestCase):
             name="input_0",
             is_input=True,
         )
-        OP = nn.Upsampling2d(scale_factor=scale_factor, mode=mode, align_corners=align_corners)
+        OP = nn.Upsampling2d(
+            scale_factor=scale_factor, mode=mode, align_corners=align_corners
+        )
         Y = OP(X)
         Y._attrs["name"] = "output_0"
         Y._attrs["is_output"] = True
