@@ -690,7 +690,7 @@ def gen_function(func_attrs, exec_cond_template, dim_info_dict):
     backend_types = [
         "uint4",
         "uint2",
-        "uint",
+        "uint1",
     ]
     alignment = tensor_accessor_codegen.find_max_alignment(
         ak, dtype, func_attrs["input_accessors"]

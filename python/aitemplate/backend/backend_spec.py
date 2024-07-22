@@ -78,7 +78,7 @@ class GPUBackendSpec(BackendSpec):
             "bool": 1,
             "uint4": 16,
             "uint2": 8,
-            "uint": 4,
+            "uint1": 4,
             "bfloat16": 2,
         }
     )
@@ -376,14 +376,14 @@ class GPUBackendSpec(BackendSpec):
             num_elems_to_backend_type = (
                 (8, "uint4"),
                 (4, "uint2"),
-                (2, "uint"),
+                (2, "uint1"),
                 (1, "half"),
             )
         elif dtype == "bfloat16":
             num_elems_to_backend_type = (
                 (8, "uint4"),
                 (4, "uint2"),
-                (2, "uint"),
+                (2, "uint1"),
                 (1, "bfloat16"),
             )
         elif dtype == "int64":

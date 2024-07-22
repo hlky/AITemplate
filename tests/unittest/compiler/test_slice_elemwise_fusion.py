@@ -119,7 +119,7 @@ class SliceElemwiseFusionTestCase(unittest.TestCase):
             slice_start_indices=(2,),
             slice_end_indices=(None,),
             test_name="slice_elemwise_fusion",
-            expected_max_read_t="uint",
+            expected_max_read_t="uint1",
             expected_op_t="half2",
             expected_data_t="half",
         )
@@ -137,7 +137,7 @@ class SliceElemwiseFusionTestCase(unittest.TestCase):
             slice_start_indices=(0, 3, 0),
             slice_end_indices=(None, 5, None),
             test_name="slice_elemwise_fusion",
-            expected_max_read_t="uint",
+            expected_max_read_t="uint1",
             expected_op_t="half2",
             expected_data_t="half",
         )
@@ -387,7 +387,7 @@ class SliceElemwiseFusionTestCase(unittest.TestCase):
             slice_start_indices=(0, 0, 0),
             slice_end_indices=(None, None, 8),
             test_name="slice_elemwise_fusion_dynamic_broadcast",
-            expected_max_read_t="uint",
+            expected_max_read_t="uint1",
             expected_op_t="half2",
             expected_data_t="half",
             input_x2_shape=(10, 8),
