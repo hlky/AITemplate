@@ -45,6 +45,7 @@ from aitemplate.compiler.ops.tensor.size import size
 from aitemplate.compiler.ops.tensor.slice_reshape_scatter import slice_reshape_scatter
 from aitemplate.compiler.ops.tensor.slice_scatter import slice_scatter
 from aitemplate.compiler.ops.tensor.split import split
+from aitemplate.compiler.ops.tensor.stack import stack
 from aitemplate.compiler.ops.tensor.topk import topk
 from aitemplate.compiler.ops.tensor.transpose import transpose
 from aitemplate.compiler.ops.tensor.where import where
