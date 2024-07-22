@@ -22,6 +22,7 @@ from aitemplate.frontend.nn.conv2d import *
 from aitemplate.frontend.nn.conv3d import *
 from aitemplate.frontend.nn.linear import *
 from aitemplate.frontend.nn.padding import *
+from aitemplate.frontend.nn.pool1d import *
 from aitemplate.frontend.nn.pool2d import *
 from aitemplate.frontend.nn.fpn_proposal import FPNProposal
 from aitemplate.frontend.nn.proposal import Proposal
