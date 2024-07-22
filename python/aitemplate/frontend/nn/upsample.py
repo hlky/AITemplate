@@ -15,7 +15,12 @@
 """
 Unsampling2d module.
 """
-from aitemplate.compiler.ops import upsampling2d, upsampling2d_add
+from aitemplate.compiler.ops import (
+    upsampling1d,
+    upsampling1d_add,
+    upsampling2d,
+    upsampling2d_add,
+)
 from aitemplate.frontend.nn.module import Module
 
 
@@ -57,6 +62,31 @@ class Upsampling2dAdd(Module):
     def __init__(self, scale_factor, mode, align_corners=False):
         super().__init__()
         self.op = upsampling2d_add(scale_factor, mode, align_corners)
+
+    def forward(self, *args):
+        assert len(args) == 2
+        x = args[0]
+        res = args[1]
+        return self.op(x, res)
+
+
+class Upsampling1d(Module):
+    def __init__(self, scale_factor, mode, align_corners=False):
+        super().__init__()
+        self.op = upsampling1d(scale_factor, mode, align_corners)
+
+    def forward(self, *args):
+        out = None
+        x = args[0]
+        if len(args) == 2:
+            out = args[1]
+        return self.op(x, out)
+
+
+class Upsampling1dAdd(Module):
+    def __init__(self, scale_factor, mode, align_corners=False):
+        super().__init__()
+        self.op = upsampling1d_add(scale_factor, mode, align_corners)
 
     def forward(self, *args):
         assert len(args) == 2

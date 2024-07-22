@@ -15,6 +15,11 @@
 """
 CUDA upsampling module init
 """
-from aitemplate.backend.cuda.upsample import upsampling2d, upsampling2d_add
+from aitemplate.backend.cuda.upsample import (
+    upsampling1d,
+    upsampling1d_add,
+    upsampling2d,
+    upsampling2d_add,
+)
 
-__all__ = ["upsampling2d", "upsampling2d_add"]
+__all__ = ["upsampling1d", "upsampling1d_add", "upsampling2d", "upsampling2d_add"]

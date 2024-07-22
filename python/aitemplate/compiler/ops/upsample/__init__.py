@@ -15,8 +15,10 @@
 """
 Upsampling module init.
 """
+from aitemplate.compiler.ops.upsample.upsampling1d import upsampling1d
+from aitemplate.compiler.ops.upsample.upsampling1d_add import upsampling1d_add
 from aitemplate.compiler.ops.upsample.upsampling2d import upsampling2d
 from aitemplate.compiler.ops.upsample.upsampling2d_add import upsampling2d_add
 
 
-__all__ = ["upsampling2d", "upsampling2d_add"]
+__all__ = ["upsampling1d", "upsampling1d_add", "upsampling2d", "upsampling2d_add"]
