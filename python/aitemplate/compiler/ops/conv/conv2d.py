@@ -537,9 +537,7 @@ class conv2d(Operator):
             )
 
         profiler_filename = get_profiler_filename(self._attrs, "conv")
-        runner = backend.profiler_runner.Runner(
-            devices, self._attrs["name"], timeout=180
-        )
+        runner = backend.profiler_runner.Runner(devices, self._attrs["name"])
         x_shape = self._invert_exec_key(exec_key)
         command = self._gen_profile_cmd(profiler_prefix, profiler_filename, x_shape)
         runner.push(profiler_filename, command)
@@ -746,6 +744,7 @@ class conv2d(Operator):
                         ub = mid - 1
                 last_mid = mid
                 mid = (lb + ub) // 2
+                break
             lo_region_key = self._gen_dyn_exec_key(
                 origin_lb, last_mid, dim1_lb, dim1_ub, dim2_lb, dim2_ub, dim3
             )
