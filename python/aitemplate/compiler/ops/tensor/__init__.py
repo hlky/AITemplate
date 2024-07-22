@@ -37,6 +37,8 @@ from aitemplate.compiler.ops.tensor.permute021 import permute021
 from aitemplate.compiler.ops.tensor.permute0213 import permute0213
 from aitemplate.compiler.ops.tensor.permute102 import permute102
 from aitemplate.compiler.ops.tensor.permute210 import permute210
+from aitemplate.compiler.ops.tensor.pixel_shuffle import pixel_shuffle
+from aitemplate.compiler.ops.tensor.pixel_unshuffle import pixel_unshuffle
 from aitemplate.compiler.ops.tensor.relational import eq, ge, gt, le, lt, ne
 from aitemplate.compiler.ops.tensor.repeat_interleave import repeat_interleave
 from aitemplate.compiler.ops.tensor.size import size

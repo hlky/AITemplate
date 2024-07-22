@@ -30,6 +30,8 @@ from aitemplate.backend.rocm.tensor import (  # noqa
     permute0213,
     permute102,
     permute210,
+    pixel_shuffle,
+    pixel_unshuffle,
     repeat_interleave,
     slice_reshape_scatter,
     slice_scatter,
