@@ -26,6 +26,7 @@ from aitemplate.backend.rocm.tensor import (  # noqa
     expand_static_shape,
     full,
     identity,
+    meshgrid,
     pad,
     permute021,
     permute0213,
