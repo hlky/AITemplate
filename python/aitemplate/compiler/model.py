@@ -178,6 +178,8 @@ class Model:
             self.lib_path = lib_path
             self.DLL = ctypes.cdll.LoadLibrary(lib_path)
             self.is_open = True
+            self.get_last_error_message_func = getattr(self.DLL, "GetLastErrorMessage")
+            self.get_last_error_message_func.restype = ctypes.c_char_p
 
         def close(self):
             if self.is_open:
@@ -193,9 +195,15 @@ class Model:
             def _wrapped_func(*args):
                 err = method(*args)
                 if err:
-                    raise RuntimeError(f"Error in function: {method.__name__}")
+                    last_error_message = self.get_last_error_message()
+                    raise RuntimeError(
+                        f"Error in function: {method.__name__} - {last_error_message}"
+                    )
 
             return _wrapped_func
+
+        def get_last_error_message(self):
+            return self.get_last_error_message_func().decode("utf-8")
 
     def __init__(
         self,

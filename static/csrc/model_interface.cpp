@@ -17,18 +17,25 @@
 #include <unordered_map>
 #include "model-generated.h"
 #include "model_container.h"
+#include <string>
+#include <thread>
+
+thread_local std::string last_error_message;
 
 // Important: don't let exceptions escape the functions below.
 // They can cause problems when -fvisibility=hidden. But more
 // importantly, they can crash the program if they try to cross
 // the language boundary into Python.
+
 #define CONVERT_EXCEPTION_TO_ERROR_CODE(...)     \
   try {                                          \
     __VA_ARGS__                                  \
   } catch (const std::exception& e) {            \
+    last_error_message = e.what();               \
     LOG(ERROR) << "Error: " << e.what();         \
     return AITemplateError::AITemplateFailure;   \
   } catch (...) {                                \
+    last_error_message = "Unknown exception occurred."; \
     LOG(ERROR) << "Unknown exception occurred."; \
     return AITemplateError::AITemplateFailure;   \
   }                                              \
@@ -36,6 +43,7 @@
 
 #define RETURN_ERROR_IF_NULL(var)                          \
   if (var == nullptr) {                                    \
+    last_error_message = "Variable " #var " can't be null";\
     LOG(ERROR) << "Variable " << #var << " can't be null"; \
     return AITemplateError::AITemplateFailure;             \
   }
@@ -77,11 +85,16 @@ DefaultAllocator default_allocator;
 
 extern "C" {
 
+const char* GetLastErrorMessage() {
+  return last_error_message.c_str();
+}
+
 AITemplateError AITemplateModelContainerCreate(
     AITemplateModelHandle* ret,
     size_t num_runtimes,
     AITemplateAllocator* allocator) {
   if (num_runtimes == 0) {
+    last_error_message = "num_runtimes must be positive, but got 0";
     LOG(ERROR) << "num_runtimes must be positive, but got 0";
     return AITemplateError::AITemplateFailure;
   }

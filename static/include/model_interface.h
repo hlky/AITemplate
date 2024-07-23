@@ -133,6 +133,8 @@ enum class AITemplateAllocatorType {
 
 extern "C" {
 
+AIT_EXPORT const char* GetLastErrorMessage();
+
 // Create a ModelContainer. See model_container.h for all the details.
 // Some important high-level notes:
 // * If allocator is null, a default allocator is used (forwards to
