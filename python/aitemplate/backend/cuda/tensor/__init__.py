@@ -30,6 +30,7 @@ from aitemplate.backend.cuda.tensor import (
     index_select,
     jagged_to_padded_dense,
     masked_select,
+    pad,
     padded_dense_to_jagged,
     permute,
     permute021,

@@ -27,6 +27,8 @@
 #include <cuda_bf16.h>
 #include <nvtx3/nvToolsExt.h>
 
+using bfloat16 = __nv_bfloat16;
+
 namespace ait {
 
 inline thread_local bool target_has_graph_mode = true;
