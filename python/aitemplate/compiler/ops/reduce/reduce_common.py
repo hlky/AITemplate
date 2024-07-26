@@ -246,7 +246,9 @@ class reduce_base(Operator):
         self._set_depth()
         reduction_axes = self._attrs["reduction_axes"]
         if not len(reduction_axes) == 1:
-            raise NotImplementedError("Multiple reduction axes are not supported yet")
+            raise NotImplementedError(
+                "For multiple reduction dim repeat the op.\nop(dim=(1, 2), keepdim=True) -> \nunsqueeze(1)(op(dim=1, keepdim=True)(op(dim=1)(x)))"
+            )
         input_rank = len(x._attrs["shape"])
         self._attrs["reduction_axes"] = [
             wrap_dim(axis, input_rank) for axis in reduction_axes
