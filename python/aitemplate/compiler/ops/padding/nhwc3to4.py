@@ -35,5 +35,8 @@ SHAPE_FUNC_TEMPLATE = jinja2.Template(
 
 
 class nhwc3to4(nhwc_pad_common):
-    def __init__(self):
-        super().__init__(SHAPE_FUNC_TEMPLATE, 4)
+    def __init__(self, shape_func_template=None, padded_channels=None):
+        super().__init__(
+            SHAPE_FUNC_TEMPLATE if shape_func_template is None else shape_func_template,
+            4 if padded_channels is None else padded_channels,
+        )

@@ -206,7 +206,6 @@ class upsampling2d_base(Operator):
         return {
             "mode": self._attrs["mode"],
             "scale_factor": self._attrs["scale_factor"],
-            "out_shape": self._attrs["out_shape"],
         }
 
     def gen_function(self) -> str:
