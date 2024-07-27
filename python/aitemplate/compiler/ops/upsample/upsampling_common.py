@@ -155,21 +155,21 @@ class upsampling2d_base(Operator):
             shape_utils.gen_int_var(unique([d[3] for d in y_shapes])),
         ]
 
-        in_h = x._attrs["shape"][1]._attrs["symbolic_value"]
-        in_w = x._attrs["shape"][2]._attrs["symbolic_value"]
+        in_h = x._attrs["shape"][1]
+        in_w = x._attrs["shape"][2]
         out_h = (
             in_h * int(self._attrs["scale_factor"])
             if out is None
-            else out._attrs["shape"][1]._attrs["symbolic_value"]
+            else out._attrs["shape"][1]
         )
         out_w = (
             in_w * int(self._attrs["scale_factor"])
             if out is None
-            else out._attrs["shape"][2]._attrs["symbolic_value"]
+            else out._attrs["shape"][2]
         )
 
-        output_shape[1]._attrs["symbolic_value"] = out_h
-        output_shape[2]._attrs["symbolic_value"] = out_w
+        output_shape[1] = out_h
+        output_shape[2] = out_w
 
         return output_shape
 
