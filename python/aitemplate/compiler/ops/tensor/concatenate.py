@@ -151,7 +151,17 @@ class concatenate(Operator):
                     if shape_utils.is_empty_rank1_tensor(shape):
                         continue
                     # if output_dim != shape[idx]:
-                    if output_dim._attrs["values"] != shape[idx]._attrs["values"]:
+                    if (
+                        (output_dim._attrs["values"] != shape[idx]._attrs["values"])
+                        and (
+                            output_dim._attrs["values"][0]
+                            != shape[idx]._attrs["values"][0]
+                        )
+                        and (
+                            output_dim._attrs["values"][0]
+                            != shape[idx]._attrs["values"][1]
+                        )
+                    ):
                         raise RuntimeError(
                             "tensors expected to have the same dimensions "
                             "except concat_dim! dim: {}, shape1: {}, shape2: {}, inputs: {}".format(
