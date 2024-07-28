@@ -223,6 +223,9 @@ class elementwise(Operator):
                     Tensor(shape=[], value=arg._attrs["int_var"]._attrs["values"][0])
                 )
                 symbolic_args.append(arg._attrs["int_var"].symbolic_value())
+            elif isinstance(arg, IntVar):
+                converted_args.append(Tensor(shape=[], value=arg.upper_bound()))
+                symbolic_args.append(arg.symbolic_value())
             elif isinstance(arg, Tensor):
                 converted_args.append(arg)
                 arg_dtype = normalize_dtype(arg.dtype())
