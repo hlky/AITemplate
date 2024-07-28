@@ -23,11 +23,11 @@ void invoke_arange(
     if (numel < 1024) {
         dim3 grid(1);
         dim3 block(numel);
-        ArangeKernel<{{elem_type}}><<<grid, block, 0, stream>>>(output, {{start}}, {{step}}, numel);
+        ArangeKernel<{{elem_type}}><<<grid, block, 0, stream>>>(output, start, step, numel);
     } else {
         dim3 grid((numel + 1024 - 1) / 1024);
         dim3 block(1024);
-        ArangeKernel<{{elem_type}}><<<grid, block, 0, stream>>>(output, {{start}}, {{step}}, numel);
+        ArangeKernel<{{elem_type}}><<<grid, block, 0, stream>>>(output, start, step, numel);
     }
 }
     """
@@ -47,8 +47,8 @@ namespace {
 {
     invoke_arange(
         static_cast<{{elem_type}}*>(output),
-        {{start}},
-        {{step}},
+        start,
+        step,
         num_elements,
         stream);
 }
@@ -118,14 +118,6 @@ def gen_function(func_attrs: Dict[str, Any], header_files: str, backend_spec) ->
         raise NotImplementedError("Unsupported data type for arange " + output_type)
 
     prefix = backend_spec.prefix
-    start: IntVar = func_attrs["start"]
-    step: IntVar = func_attrs["step"]
-    start_value = start._attrs["name"]
-    if start_value is None:
-        start_value = start.symbolic_value()
-    step_value = step._attrs["name"]
-    if step_value is None:
-        step_value = step.symbolic_value()
 
     return FUNC_TEMPLATE.render(
         header_files=header_files,
@@ -133,14 +125,10 @@ def gen_function(func_attrs: Dict[str, Any], header_files: str, backend_spec) ->
         kernel=KERNEL_TEMPLATE.render(
             prefix=prefix,
             elem_type=output_type,
-            start=start_value,
-            step=step_value,
         ),
         func_signature=FUNC_SIGNATURE.render(
             func_name=func_attrs["name"], prefix=prefix, elem_type=output_type
         ),
-        start=start_value,
-        step=step_value,
     )
 
 
