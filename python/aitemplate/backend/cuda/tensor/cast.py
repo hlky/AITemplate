@@ -97,21 +97,43 @@ CAST_FUNCS = {
         "half": "(half)input[idx];",
         "float": "(float)input[idx];",
         "bfloat16": "(bfloat16)input[idx];",
+        "int32_t": "(int32_t)input[idx];",
+        "int64_t": "(int64_t)input[idx];",
     },
     "half": {
         "bfloat16": "__float2bfloat16_rn(__half2float(input[idx]));",
         "float": "__half2float(input[idx]);",
         "bool": "__half2float(input[idx]) != 0.0f;",
+        "int32_t": "(int32_t)__half2float(input[idx]);",
+        "int64_t": "(int64_t)__half2float(input[idx]);",
     },
     "bfloat16": {
         "half": "__float2half_rn(__bfloat162float(input[idx]));",
         "float": "__bfloat162float(input[idx]);",
         "bool": "__bfloat162float(input[idx]) != 0.0f;",
+        "int32_t": "(int32_t)__bfloat162float(input[idx]);",
+        "int64_t": "(int64_t)__bfloat162float(input[idx]);",
     },
     "float": {
         "bfloat16": "__float2bfloat16_rn(input[idx]);",
         "half": "__float2half_rn(input[idx]);",
         "bool": "input[idx] != 0.0f;",
+        "int32_t": "(int32_t)input[idx];",
+        "int64_t": "(int64_t)input[idx];",
+    },
+    "int32_t": {
+        "bool": "input[idx] != 0;",
+        "half": "__float2half_rn((float)input[idx]);",
+        "bfloat16": "__float2bfloat16_rn((float)input[idx]);",
+        "float": "(float)input[idx];",
+        "int64_t": "(int64_t)input[idx];",
+    },
+    "int64_t": {
+        "bool": "input[idx] != 0;",
+        "half": "__float2half_rn((float)input[idx]);",
+        "bfloat16": "__float2bfloat16_rn((float)input[idx]);",
+        "float": "(float)input[idx];",
+        "int32_t": "(int32_t)input[idx];",
     },
 }
 

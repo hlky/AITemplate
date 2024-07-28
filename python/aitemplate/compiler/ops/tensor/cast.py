@@ -23,8 +23,13 @@ from aitemplate.compiler.dtype import normalize_dtype
 class cast(Operator):
     """
     Returns the cast of input tensor to specified type.
-    Only the conversion between any pair of float16, bfloat16,
-    and float32 dtypes is supported.
+    Only the conversion between any pair of:
+        - `float16`
+        - `bfloat16`
+        - `float32`
+        - `bool`
+        - `int`
+        - `int64`
 
     Args:
         x (Tensor): the source tensor
@@ -49,14 +54,14 @@ class cast(Operator):
     ) -> Tensor:
         x_dtype = normalize_dtype(x._attrs["dtype"])
         dtype = normalize_dtype(dtype)
-        if x_dtype not in ("float16", "bfloat16", "float32", "bool"):
+        if x_dtype not in ("float16", "bfloat16", "float32", "bool", "int", "int64"):
             raise TypeError(
-                f"Expected dtype for x must be float16,bfloat16 or float32 , but got {x_dtype}."
+                f"Expected dtype for x must be float16, bfloat16, float32, bool, int or int64, but got {x_dtype}."
             )
 
-        if dtype not in ("float16", "bfloat16", "float32", "bool"):
+        if dtype not in ("float16", "bfloat16", "float32", "bool", "int", "int64"):
             raise TypeError(
-                f"Expected dtype to cast must be float16,bfloat16 or float32 , but got {dtype}."
+                f"Expected dtype to cast must be float16, bfloat16, float32, bool, int or int64, but got {dtype}."
             )
 
         if dtype == x_dtype:
