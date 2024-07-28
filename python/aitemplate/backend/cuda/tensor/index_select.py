@@ -80,14 +80,17 @@ SRC_TEMPLATE = jinja2.Template(
 
 #define N_THREADS_PER_BLOCK 256
 
+namespace {
+
+template <typename T, typename IndexType>
 __global__ void index_select_kernel(
-    {{read_t}}* output,
-    const {{read_t}}* input,
-    const {{index_type}} dim_len,
-    const {{index_type}}* dim_idxs,
-    const {{index_type}} dim_idxs_len,
-    const {{index_type}} num_after,
-    const {{index_type}} N
+    T* output,
+    const T* input,
+    const IndexType dim_len,
+    const IndexType* dim_idxs,
+    const IndexType dim_idxs_len,
+    const IndexType num_after,
+    const IndexType N
 ) {
     auto idx = blockIdx.x*blockDim.x + threadIdx.x;
     #pragma unroll
@@ -100,8 +103,9 @@ __global__ void index_select_kernel(
         auto input_idx = res * dim_len * num_after + (dim_idxs[j] * num_after) + k;
         output[i] = input[input_idx];
     }
-
 }
+
+} // namespace
 
 void {{func_name}}(
     void* output,
