@@ -880,12 +880,13 @@ def _gen_input_broadcast_calculator_str(
     start_idx = 0
     for i, (input_dim, output_dim) in enumerate(zip(input_shape, output_shape)):
         if (input_dim != output_dim) and (
-            input_dim._attrs["values"] != output_dim._attrs["values"]
+            list(set(input_dim._attrs["values"]))
+            != list(set(output_dim._attrs["values"]))
         ):
             assert input_dim == IntImm(
                 1
-            ), "Unexpected shapes! Input: {}, output: {}".format(
-                input_shape, output_shape
+            ), "Unexpected shapes! Input: {}, output: {}.\nInput dim: {}, Output dim: {}".format(
+                input_shape, output_shape, input_dim, output_dim
             )
             input_strides.append(input_shape[i:])
             output_strides.append(output_shape[i:])
