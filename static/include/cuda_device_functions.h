@@ -17,13 +17,13 @@
 #include <sstream>
 #include <string>
 
+#include <cutlass/float8.h>
 #include "cutlass/conv/conv2d_problem_size.h"
 #include "cutlass/conv/device/implicit_gemm_convolution.h"
 #include "cutlass/conv/kernel/default_conv2d_fprop.h"
 #include "cutlass/cutlass.h"
 #include "cutlass/util/host_tensor.h"
 #include "cutlass/util/reference/host/tensor_fill.h"
-#include <cutlass/float8.h>
 
 #include <cuda_bf16.h>
 #include <nvtx3/nvToolsExt.h>
@@ -50,10 +50,18 @@ inline DeviceError GetDevice(int* device_idx) {
   return cudaGetDevice(device_idx);
 }
 
+inline DeviceError SetDevice(int device_idx) {
+  return cudaSetDevice(device_idx);
+}
+
 inline DeviceError GetDeviceProperties(
     DevicePropertyType* prop,
     int device_idx) {
   return cudaGetDeviceProperties(prop, device_idx);
+}
+
+inline DeviceError GetDeviceCount(int* count) {
+  return cudaGetDeviceCount(count);
 }
 
 inline std::string GetUUIDToString(const char bytes[16]) {
