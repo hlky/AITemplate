@@ -1099,4 +1099,8 @@ __device__ bfloat16_2 h2log1p(const bfloat16_2 a) {
 #endif
 }
 
+__device__ float8_e4m3 __e4m3add(const float8_e4m3 a, const float8_e4m3 b) {
+  return float8_e4m3(float(a) + float(b));
+}
+
 #endif

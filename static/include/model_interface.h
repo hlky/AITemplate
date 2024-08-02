@@ -73,6 +73,8 @@ enum class AITemplateDtype {
   kLong,
   kBool,
   kBFloat16,
+  kFloat8_e4m3,
+  kFloat8_e5m2,
 };
 
 struct AITData {
@@ -100,6 +102,8 @@ inline size_t AITemplateDtypeSizeBytes(AITemplateDtype dtype) {
       return 4;
     case AITemplateDtype::kLong:
       return 8;
+    case AITemplateDtype::kFloat8_e4m3:
+    case AITemplateDtype::kFloat8_e5m2:
     case AITemplateDtype::kBool:
       return 1;
     case AITemplateDtype::kUnset:

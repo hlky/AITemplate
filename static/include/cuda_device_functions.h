@@ -23,11 +23,14 @@
 #include "cutlass/cutlass.h"
 #include "cutlass/util/host_tensor.h"
 #include "cutlass/util/reference/host/tensor_fill.h"
+#include <cutlass/float8.h>
 
 #include <cuda_bf16.h>
 #include <nvtx3/nvToolsExt.h>
 
 using bfloat16 = __nv_bfloat16;
+using float8_e5m2 = cutlass::float_e5m2_t;
+using float8_e4m3 = cutlass::float_e4m3_t;
 
 namespace ait {
 

@@ -25,6 +25,8 @@ CUDA_HEADER_FILES = """
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
 #include <cuda_runtime.h>
+#include <cutlass/float8.h>
+
 """
 
 CONSTANT_TEMPLATE = jinja2.Template(
@@ -99,8 +101,18 @@ CAST_FUNCS = {
         "bfloat16": "(bfloat16)input[idx];",
         "int32_t": "(int32_t)input[idx];",
         "int64_t": "(int64_t)input[idx];",
+        "float8_e4m3": "(float8_e4m3)input[idx];",
+    },
+    "float8_e4m3": {
+        "half": "__float2half_rn((float)input[idx]);",
+        "bfloat16": "__float2bfloat16_rn((float)(input[idx]));",
+        "float": "(float)(input[idx]);",
+        "bool": "(float)(input[idx]) != 0.0f;",
+        "int32_t": "(int32_t)(float)(input[idx]);",
+        "int64_t": "(int64_t)(float)(input[idx]);",
     },
     "half": {
+        "float8_e4m3": "(float8_e4m3)input[idx];",
         "bfloat16": "__float2bfloat16_rn(__half2float(input[idx]));",
         "float": "__half2float(input[idx]);",
         "bool": "__half2float(input[idx]) != 0.0f;",
@@ -108,6 +120,7 @@ CAST_FUNCS = {
         "int64_t": "(int64_t)__half2float(input[idx]);",
     },
     "bfloat16": {
+        "float8_e4m3": "(float8_e4m3)input[idx];",
         "half": "__float2half_rn(__bfloat162float(input[idx]));",
         "float": "__bfloat162float(input[idx]);",
         "bool": "__bfloat162float(input[idx]) != 0.0f;",
@@ -115,6 +128,7 @@ CAST_FUNCS = {
         "int64_t": "(int64_t)__bfloat162float(input[idx]);",
     },
     "float": {
+        "float8_e4m3": "(float8_e4m3)input[idx];",
         "bfloat16": "__float2bfloat16_rn(input[idx]);",
         "half": "__float2half_rn(input[idx]);",
         "bool": "input[idx] != 0.0f;",
@@ -122,6 +136,7 @@ CAST_FUNCS = {
         "int64_t": "(int64_t)input[idx];",
     },
     "int32_t": {
+        "float8_e4m3": "(float8_e4m3)input[idx];",
         "bool": "input[idx] != 0;",
         "half": "__float2half_rn((float)input[idx]);",
         "bfloat16": "__float2bfloat16_rn((float)input[idx]);",
@@ -129,6 +144,7 @@ CAST_FUNCS = {
         "int64_t": "(int64_t)input[idx];",
     },
     "int64_t": {
+        "float8_e4m3": "(float8_e4m3)input[idx];",
         "bool": "input[idx] != 0;",
         "half": "__float2half_rn((float)input[idx]);",
         "bfloat16": "__float2bfloat16_rn((float)input[idx]);",

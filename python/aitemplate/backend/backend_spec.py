@@ -56,6 +56,8 @@ class GPUBackendSpec(BackendSpec):
             "bool": "bool",
             "float16": "half",
             "bfloat16": "bfloat16",
+            "float8_e4m3": "float8_e4m3",
+            "float8_e5m2": "float8_e5m2",
             "float32": "float",
             "float": "float",
             "int64": "int64_t",
@@ -80,6 +82,8 @@ class GPUBackendSpec(BackendSpec):
             "uint2": 8,
             "uint1": 4,
             "bfloat16": 2,
+            "float8_e4m3": 1,
+            "float8_e5m2": 1,
         }
     )
 
@@ -111,6 +115,8 @@ class GPUBackendSpec(BackendSpec):
         default_factory=lambda: [
             "half2",
             "half",
+            "float8_e4m3",
+            "float8_e5m2",
             "bfloat16_2",
             "bfloat16",
             "float",
@@ -119,6 +125,7 @@ class GPUBackendSpec(BackendSpec):
     func_enum_to_func_name: Dict[FuncEnum, Dict[str, str]] = field(
         default_factory=lambda: {
             FuncEnum.ADD: {
+                "float8_e4m3": "__e4m3add",
                 "half2": "__hadd2",
                 "bfloat16_2": "__hadd2",
                 "half": "__hadd",
@@ -357,6 +364,10 @@ class GPUBackendSpec(BackendSpec):
                 return "bfloat16_2"
             else:
                 return "bfloat16"
+        elif dtype == "float8_e4m3":
+            return "float8_e4m3"
+        elif dtype == "float8_e5m2":
+            return "float8_e5m2"
         raise NotImplementedError("Unsupported dtype {}!".format(dtype))
 
     def get_elementwise_read_backend_type(
@@ -371,6 +382,22 @@ class GPUBackendSpec(BackendSpec):
         """
         if dtype in ("float", "float32", "int32"):
             num_elems_to_backend_type = ((4, "uint4"), (2, "uint2"), (1, "float"))
+
+        elif dtype == "float8_e4m3":
+            num_elems_to_backend_type = (
+                (8, "uint4"),
+                (4, "uint2"),
+                (2, "uint1"),
+                (1, "float8_e4m3"),
+            )
+
+        elif dtype == "float8_e5m2":
+            num_elems_to_backend_type = (
+                (8, "uint4"),
+                (4, "uint2"),
+                (2, "uint1"),
+                (1, "float8_e5m2"),
+            )
 
         elif dtype == "float16":
             num_elems_to_backend_type = (
@@ -479,9 +506,13 @@ class CUDASpec(GPUBackendSpec):
         """
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
+#include <cutlass/float8.h>
+
 
 using bfloat16 = nv_bfloat16;
 using bfloat16_2 = nv_bfloat162;
+using float8_e5m2 = cutlass::float_e5m2_t;
+using float8_e4m3 = cutlass::float_e4m3_t;
 
 {{extra_header}}
         """
@@ -492,6 +523,8 @@ using bfloat16_2 = nv_bfloat162;
         default_factory=lambda: {
             "float16": "cutlass::half_t",
             "bfloat16": "cutlass::bfloat16_t",
+            "float8_e4m3": "cutlass::float_e4m3fn_t",
+            "float8_e5m2": "cutlass::float_e5m2_t",
             "float32": "float",
             "float": "float",
         }

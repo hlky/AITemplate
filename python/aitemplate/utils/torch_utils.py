@@ -29,8 +29,19 @@ from aitemplate.compiler.dtype import dtype_str_to_enum, get_dtype_size, normali
 
 
 def types_mapping():
-    from torch import bfloat16, bool, float16, float32, int32, int64
+    from torch import (
+        bfloat16,
+        bool,
+        float16,
+        float32,
+        float8_e4m3fn,
+        float8_e5m2,
+        int32,
+        int64,
+    )
 
+    yield (float8_e4m3fn, "float8_e4m3")
+    yield (float8_e5m2, "float8_e5m2")
     yield (float16, "float16")
     yield (bfloat16, "bfloat16")
     yield (float32, "float32")

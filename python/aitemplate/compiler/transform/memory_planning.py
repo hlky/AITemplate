@@ -21,7 +21,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import List
 
-from aitemplate.compiler.base import Operator, Tensor
+from aitemplate.compiler.base import Operator, StableSet, Tensor
 from aitemplate.utils.environ import multistream_max_mem_parallel_ops, multistream_mode
 from aitemplate.utils.graph_utils import split_simple_multistream_parallel_ops
 
@@ -128,6 +128,27 @@ def _make_tensor_usage_records(sorted_ops: List[Operator]) -> List[TensorUsageRe
     # remove tensor views from tensor_records
     for name in tensor_views:
         del tensor_records[name]
+
+    # remove duplicates
+    # Cast causes unneeded extra tensor records
+    last_dst_ops = StableSet()
+    last_op_name = ""
+    for key, record in list(tensor_records.items()):
+        if isinstance(record.tensor.dst_ops(), set):
+            if (
+                StableSet(list(record.tensor.dst_ops())) == last_dst_ops
+                and "cast" in last_op_name
+            ):
+                tensor_records.pop(key)
+            else:
+                last_dst_ops = StableSet(list(record.tensor.dst_ops()))
+                last_op_name = record.tensor._attrs["name"]
+        else:
+            if record.tensor.dst_ops() == last_dst_ops and "cast" in last_op_name:
+                tensor_records.pop(key)
+            else:
+                last_dst_ops = record.tensor.dst_ops()
+                last_op_name = record.tensor._attrs["name"]
 
     # sanity checks
     # make sure we have valid indices and sizes

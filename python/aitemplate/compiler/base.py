@@ -804,7 +804,7 @@ class Tensor(Node):
         self._attrs["name"] = name
         self._attrs["src_ops"] = StableSet(src_ops)
         self._attrs["dst_ops"] = StableSet(dst_ops)
-        self._attrs["dtype"] = dtype
+        self._attrs["dtype"] = normalize_dtype(dtype)
         self._attrs["is_output"] = is_output
         self._attrs["is_input"] = is_input
         self._attrs["is_param"] = False

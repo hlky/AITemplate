@@ -27,6 +27,8 @@ _DTYPE2BYTE = {
     "int32": 4,
     "int64": 8,
     "bfloat16": 2,
+    "float8_e4m3": 1,
+    "float8_e5m2": 1,
 }
 
 
@@ -44,6 +46,8 @@ _DTYPE_TO_ENUM = {
     "int64": 4,
     "bool": 5,
     "bfloat16": 6,
+    "float8_e4m3": 7,
+    "float8_e5m2": 8,
 }
 
 _ENUM_TO_DTYPE = {v: k for k, v in _DTYPE_TO_ENUM.items()}
@@ -55,6 +59,8 @@ _ENUM_TO_TORCH_DTYPE = {
     4: torch.int64,
     5: torch.bool,
     6: torch.bfloat16,
+    7: torch.float8_e4m3fn,
+    8: torch.float8_e5m2,
 }
 
 
@@ -67,6 +73,8 @@ _DTYPE_TO_TORCH_DTYPE = {
     "int64": torch.int64,
     "bool": torch.bool,
     "bfloat16": torch.bfloat16,
+    "float8_e4m3": torch.float8_e4m3fn,
+    "float8_e5m2": torch.float8_e5m2,
 }
 
 
@@ -106,6 +114,8 @@ def normalize_dtype(dtype: str) -> str:
         return "int32"
     if dtype == "float":
         return "float32"
+    if dtype == "float8_e4m3fn":
+        return "float8_e4m3"
     return dtype
 
 
@@ -158,6 +168,10 @@ def dtype_to_enumerator(dtype: str) -> str:
             return "kBool"
         elif dtype == "bfloat16":
             return "kBFloat16"
+        elif dtype == "float8_e4m3":
+            return "kFloat8_e4m3"
+        elif dtype == "float8_e5m2":
+            return "kFloat8_e5m2"
         else:
             raise AssertionError(f"unknown dtype {dtype}")
 

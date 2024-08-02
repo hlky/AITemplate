@@ -28,7 +28,9 @@ def get_alignments(dtype: str) -> List[int]:
     Return all of the valid alignment values for the dtype.
     """
     dtype = normalize_dtype(dtype)
-    if dtype in ("float16", "bfloat16"):
+    if dtype in ("float8_e4m3", "float8_e5m2"):
+        return [8, 4, 2, 1]
+    elif dtype in ("float16", "bfloat16"):
         return [8, 4, 2, 1]
     elif dtype in ("float", "float32"):
         return [4, 2, 1]
