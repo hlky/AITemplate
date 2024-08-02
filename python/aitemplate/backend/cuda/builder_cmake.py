@@ -230,6 +230,7 @@ class BuilderCMake:
         if is_windows():
             host_compiler_options = [
                 "-Xcompiler=/Zc:__cplusplus",
+                "-Xcompiler=/bigobj",
                 "-D_DISABLE_EXTENDED_ALIGNED_STORAGE",
             ]
         else:
