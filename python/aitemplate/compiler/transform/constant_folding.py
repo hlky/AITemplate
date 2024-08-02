@@ -218,6 +218,7 @@ def _constant_folding_impl(
     sorted_graph: List[Tensor],
     workdir: str,
     model_name: str,
+    do_constant_folding: bool = True,
 ) -> Tuple[Dict[str, Tensor], List[Tuple[str, str]], List[Tensor]]:
     model_dir = os.path.join(workdir, model_name)
 
@@ -235,7 +236,7 @@ def _constant_folding_impl(
         constant_folding_inputs,
     ) = _extract_foldable_subgraph(sorted_graph)
     output_tensors = [tensor for tensor in subgraph if tensor._attrs["is_output"]]
-    if not output_tensors:
+    if not output_tensors or not do_constant_folding:
         _LOGGER.info("No constants to fold, skipping constant folding.")
         # Write a dummy constant folder so everything still compiles.
         with open(os.path.join(model_dir, "constant_folder-generated.h"), "w") as f:
@@ -286,6 +287,7 @@ def constant_folding(
     sorted_graph: List[Tensor],
     workdir: str,
     model_name: str,
+    do_constant_folding: bool = True,
 ) -> Tuple[List[Tensor], List[Tuple[str, str]], List[Tensor]]:
     """
     Fold and propagate constants.
@@ -300,7 +302,7 @@ def constant_folding(
     is stored in workdir/constant_folding.
     """
     new_constants, file_pairs, constant_folding_inputs = _constant_folding_impl(
-        sorted_graph, workdir, model_name
+        sorted_graph, workdir, model_name, do_constant_folding=do_constant_folding
     )
 
     # Replace ops with their folded values.

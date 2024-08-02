@@ -287,21 +287,17 @@ def compile_model(
             constant_folding_workdir = os.path.join(workdir, test_name)
             os.makedirs(constant_folding_workdir, exist_ok=True)
             # TODO: investigate constant folding memory planning with some models
-            if do_constant_folding:
-                (
-                    graph,
-                    constant_folding_file_pairs,
-                    constant_folding_inputs,
-                ) = compiler.transform.constant_folding(graph, workdir, test_name)
-                graph_utils.dump_graph_debug_str_to_file(
-                    graph, test_dir, "constant_folding"
-                )
-                _LOGGER.info(
-                    f"folded constants elapsed time: {elapsed_dt_sec(start_t)}"
-                )
-            else:
-                constant_folding_file_pairs = []
-                constant_folding_inputs = None
+            (
+                graph,
+                constant_folding_file_pairs,
+                constant_folding_inputs,
+            ) = compiler.transform.constant_folding(
+                graph, workdir, test_name, do_constant_folding=do_constant_folding
+            )
+            graph_utils.dump_graph_debug_str_to_file(
+                graph, test_dir, "constant_folding"
+            )
+            _LOGGER.info(f"folded constants elapsed time: {elapsed_dt_sec(start_t)}")
 
             compiler.transform.dedup_symbolic_name(graph)
             graph_utils.dump_graph_debug_str_to_file(
