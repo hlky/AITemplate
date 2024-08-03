@@ -810,7 +810,7 @@ class ModelContainerGenerator:
             self.debug_settings.check_all_outputs
             or node._attrs.get("check_outputs", False)
         ) and (not isinstance(node, IntVarTensor)):
-            self._append_check_outputs(node)
+            self._append_check_outputs(node, self.debug_settings.elements_to_check)
 
     def _append_check_nan_and_inf(self, node: Tensor):
         self.debug_header = True
@@ -822,10 +822,13 @@ class ModelContainerGenerator:
         self.func_seq.append(code_text)
         self._rendered_checks_func_code.append(code_text)
 
-    def _append_check_outputs(self, node: Tensor):
+    def _append_check_outputs(self, node: Tensor, elements_to_check: Optional[int]):
         self.debug_header = True
         tensor_name = node._attrs["name"]
-        elem_cnt = "*".join([shape.pseudo_code() for shape in node.shape()])
+        if elements_to_check is None:
+            elem_cnt = "*".join([shape.pseudo_code() for shape in node.shape()])
+        else:
+            elem_cnt = elements_to_check
         self.func_name_seq.append("output_check")
 
         backend_type = self.dtype_to_backend_type(node._attrs["dtype"])

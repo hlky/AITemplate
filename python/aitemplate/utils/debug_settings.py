@@ -31,6 +31,8 @@ class AITDebugSettings:
         Whether or not to check this tensor is nan or inf during runtime.
     check_all_outputs : bool (default: False)
         Whether or not to print this tensor's value out during runtime.
+    elements_to_check: int, optional
+        Number of elements to check.
     gen_profiler_annotation : bool (default: False)
         Whether or not to add profile annotation primitives when doing codegen.
         (e.g. NVTX for CUDA and rocTX for AMD) Currently only supports NVIDIA.
@@ -42,6 +44,7 @@ class AITDebugSettings:
 
     check_all_nan_and_inf: bool = False
     check_all_outputs: bool = False
+    elements_to_check: Optional[int] = None
     gen_profiler_annotation: bool = False
     dump_ait_to_py: Optional[str] = None
     gen_standalone: bool = environ.enable_standalone_exe_generation()
