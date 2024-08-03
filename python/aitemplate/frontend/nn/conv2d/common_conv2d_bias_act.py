@@ -62,6 +62,7 @@ class Conv2dBiasAct(Module):
             [description]
         """
         super().__init__()
+        self.dtype = dtype
         self.weight = Parameter(
             shape=[out_channels, kernel_size, kernel_size, in_channels // groups],
             dtype=dtype,
@@ -73,4 +74,17 @@ class Conv2dBiasAct(Module):
     def forward(self, *args):
         assert len(args) == 1
         x = args[0]
-        return self.op(x, self.weight.tensor(), self.bias.tensor())
+        dtype = x.dtype()
+        return self.op(
+            x,
+            (
+                self.weight.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.weight.tensor(), dtype)
+            ),
+            (
+                self.bias.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.bias.tensor(), dtype)
+            ),
+        )
