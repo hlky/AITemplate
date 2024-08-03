@@ -43,6 +43,7 @@ class LayerNorm(Module):
         Gamma/Beta, if not None, have the same shape as normalized_shape.
         """
         super().__init__()
+        self.dtype = dtype
         self.eps = eps
         self.dim = (
             normalized_shape
@@ -61,7 +62,12 @@ class LayerNorm(Module):
     def forward(self, *args):
         assert len(args) == 1
         x = args[0]
+        dtype = x.dtype()
         weight = self.weight.tensor() if self.weight is not None else None
         bias = self.bias.tensor() if self.bias is not None else None
+        if weight is not None and dtype != self.dtype:
+            weight = ops.cast()(weight, dtype)
+        if bias is not None and dtype != self.dtype:
+            bias = ops.cast()(bias, dtype)
         y = self.op(x, weight, bias, self.dim, self.eps)
         return y
