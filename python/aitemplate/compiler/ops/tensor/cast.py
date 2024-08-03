@@ -31,6 +31,7 @@ class cast(Operator):
         - `int`
         - `int64`
         - `float8_e4m3`
+        - `float8_e5m2`
 
     Args:
         x (Tensor): the source tensor
@@ -63,9 +64,10 @@ class cast(Operator):
             "int",
             "int64",
             "float8_e4m3",
+            "float8_e5m2",
         ):
             raise TypeError(
-                f"Expected dtype for x must be float16, bfloat16, float32, bool, int, int64 or float8_e4m3, but got {x_dtype}."
+                f"Expected dtype for x must be float16, bfloat16, float32, bool, int, int64, float8_e4m3 or float8_e5m2, but got {x_dtype}."
             )
 
         if dtype not in (
@@ -76,9 +78,10 @@ class cast(Operator):
             "int",
             "int64",
             "float8_e4m3",
+            "float8_e5m2",
         ):
             raise TypeError(
-                f"Expected dtype to cast must be float16, bfloat16, float32, bool, int, int64, float8_e4m3, but got {dtype}."
+                f"Expected dtype to cast must be float16, bfloat16, float32, bool, int, int64, float8_e4m3 or float8_e5m2, but got {dtype}."
             )
 
         if dtype == x_dtype:
