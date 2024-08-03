@@ -73,6 +73,7 @@ class Linear(Module):
         super().__init__()
         if Linear.USE_CUDA is None:
             Linear.USE_CUDA = detect_target().name() == "cuda"
+        self.dtype = dtype
         self.weight = Parameter(shape=[out_channels, in_channels], dtype=dtype)
         op_name = "gemm_rcr_bias" if bias else "gemm_rcr"
         if specialization is not None:
@@ -88,11 +89,23 @@ class Linear(Module):
     def forward(self, *args):
         assert len(args) >= 1
         x = args[0]
+        dtype = x.dtype()
         if not self.USE_CUDA and len(x._attrs["shape"]) != 2:
             x = ops.reshape()(x, [-1, self.in_channels])
-        inputs = [x, self.weight.tensor()]
+        inputs = [
+            x,
+            (
+                self.weight.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.weight.tensor(), dtype)
+            ),
+        ]
         if self.use_bias:
-            inputs.append(self.bias.tensor())
+            inputs.append(
+                self.bias.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.bias.tensor(), dtype)
+            )
         if len(args) == 2:
             inputs.append(args[1])
         output = self.op(*inputs)
