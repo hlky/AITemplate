@@ -162,6 +162,7 @@ def compile_model(
     do_optimize_graph: bool = True,
     do_constant_folding: bool = True,
     profile_timeout: int = 3600,
+    n_cpus: int = -1,
 ) -> Model:
     """Compiles a model and generates a .so file.
 
@@ -343,7 +344,7 @@ def compile_model(
             file_pairs.extend(main_pairs)
 
             start_t = datetime.now()
-            compile_engine = backend.builder.get_compile_engine()
+            compile_engine = backend.builder.get_compile_engine(n_cpus)
             compile_engine.make(
                 file_pairs, dll_name, workdir, test_name, debug_settings
             )

@@ -914,12 +914,12 @@ clean:
         _run_make_cmds(cmds, self._timeout, build_dir, allow_cache=allow_cache)
 
 
-def get_compile_engine():
+def get_compile_engine(n_cpus: int = -1):
     if is_cmake_compilation():
         from aitemplate.backend.cuda import builder_cmake
 
-        compile_engine = builder_cmake.BuilderCMake()
+        compile_engine = builder_cmake.BuilderCMake(n_cpus)
     else:
-        compile_engine = Builder()
+        compile_engine = Builder(n_cpus)
 
     return compile_engine
