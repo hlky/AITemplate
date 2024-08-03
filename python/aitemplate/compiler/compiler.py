@@ -163,6 +163,8 @@ def compile_model(
     do_constant_folding: bool = True,
     profile_timeout: int = 3600,
     n_cpus: int = -1,
+    do_compile: bool = True,
+    do_build: bool = True,
 ) -> Model:
     """Compiles a model and generates a .so file.
 
@@ -343,14 +345,24 @@ def compile_model(
             )
             file_pairs.extend(main_pairs)
 
-            start_t = datetime.now()
-            compile_engine = backend.builder.get_compile_engine(n_cpus)
-            compile_engine.make(
-                file_pairs, dll_name, workdir, test_name, debug_settings
-            )
-            _LOGGER.info(
-                f"compiled the final .so file elapsed time: {elapsed_dt_sec(start_t)}",
-            )
+            if do_compile:
+                start_t = datetime.now()
+                compile_engine = backend.builder.get_compile_engine(n_cpus)
+                compile_engine.make(
+                    file_pairs,
+                    dll_name,
+                    workdir,
+                    test_name,
+                    debug_settings,
+                    do_build=do_build,
+                )
+                _LOGGER.info(
+                    f"compiled the final .so file elapsed time: {elapsed_dt_sec(start_t)}",
+                )
+                if not do_build:
+                    return
+            else:
+                return
     total_usage = max_blob + max_constant_blob + workspace.total_size()
     module = Model(
         os.path.join(workdir, test_name, dll_name), num_runtimes, allocator_kind

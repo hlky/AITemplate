@@ -348,6 +348,7 @@ class BuilderCMake:
         test_name: str,
         debug_settings: AITDebugSettings = _DEBUG_SETTINGS,
         allow_cache=False,
+        do_build=True,
     ):
         # Generates a CMakeLists.txt files and builds a model and a standalone project
 
@@ -413,6 +414,8 @@ class BuilderCMake:
         with cmake_filename.open("w") as f:
             f.write(rendered)
 
+        if not do_build:
+            return
         # execute cmake
         cmake_build_dir = build_dir / "build"
         cmake_cmd = Target.current().cmake()

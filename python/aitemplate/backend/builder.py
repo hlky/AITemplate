@@ -886,6 +886,7 @@ clean:
         test_name,
         debug_settings=_DEBUG_SETTINGS,
         allow_cache=True,
+        do_build=True,
     ):
         self.gen_makefile(file_pairs, dll_name, workdir, test_name, debug_settings)
         self.postprocess_build_dir(workdir, test_name)
@@ -911,7 +912,8 @@ clean:
         cmds = [make_clean_cmd, make_all_cmd]
         if not is_debug():
             cmds.append(make_clean_constants_cmd)
-        _run_make_cmds(cmds, self._timeout, build_dir, allow_cache=allow_cache)
+        if do_build:
+            _run_make_cmds(cmds, self._timeout, build_dir, allow_cache=allow_cache)
 
 
 def get_compile_engine(n_cpus: int = -1):
