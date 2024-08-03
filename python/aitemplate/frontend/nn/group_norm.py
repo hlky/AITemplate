@@ -37,6 +37,7 @@ class GroupNorm(Module):
     ):
         """Group Norm init"""
         super().__init__()
+        self.dtype = dtype
         self.eps = eps
         op_name = "group_norm_swish" if use_swish else "group_norm"
         self.weight = Parameter(shape=[num_channels], dtype=dtype)
@@ -46,5 +47,19 @@ class GroupNorm(Module):
     def forward(self, *args):
         assert len(args) == 1
         x = args[0]
-        y = self.op(x, self.weight.tensor(), self.bias.tensor(), self.eps)
+        dtype = x.dtype()
+        y = self.op(
+            x,
+            (
+                self.weight.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.weight.tensor(), dtype)
+            ),
+            (
+                self.bias.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.bias.tensor(), dtype)
+            ),
+            self.eps,
+        )
         return y
