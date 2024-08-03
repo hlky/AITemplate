@@ -38,6 +38,7 @@ class Embedding(Module):
         dtype,
     ):
         super().__init__()
+        self.dtype = dtype
         self.weight = Parameter(shape=shape, dtype=dtype)
 
     def tensor(self):
@@ -46,7 +47,15 @@ class Embedding(Module):
     def forward(self, indices: Tensor):
         # NOTE: flatten in module?
         assert indices._rank() == 1, "indices should be a 1d-array"
-        embedding = ops.batch_gather()(self.weight.tensor(), indices)
+        dtype = indices.dtype()
+        embedding = ops.batch_gather()(
+            (
+                self.weight.tensor()
+                if dtype == self.dtype
+                else ops.cast()(self.weight.tensor(), dtype)
+            ),
+            indices,
+        )
         return embedding
 
 
