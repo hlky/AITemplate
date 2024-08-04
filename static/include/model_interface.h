@@ -13,14 +13,15 @@
 //  limitations under the License.
 //
 #pragma once
-#include "short_file.h"
 #include <stddef.h>
 #include <stdint.h>
+#include <array>
 #include <numeric>
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include <array>
+#include "short_file.h"
+
 
 // We compile all models with -fvisibility=hidden. Any symbols that need to be
 // exposed in the final shared library must be declared with AIT_EXPORT to make
@@ -39,16 +40,27 @@
 struct AITemplateModelOpaque {};
 using AITemplateModelHandle = AITemplateModelOpaque*;
 
+enum class AITemplateWorkspaceAllocationMode {
+  // workspace is allocated immediately and not released until module is
+  // unloaded
+  kEager = 0,
+  // workspace is allocated at first run and not released until module is
+  // unloaded
+  kLazy,
+  // workspace is allocated each run then freed after use
+  kFau
+};
+
 enum class AITemplateError : int {
   AITemplateSuccess = 0,
   AITemplateFailure = 1,
 };
 
-#define AIT_ERROR_CHECK(call)                                             \
-  if ((call) != AITemplateError::AITemplateSuccess) {                     \
-    throw std::runtime_error(                                             \
-        std::string(#call " API call failed at ") + __SHORT_FILE__ + ", line" + \
-        std::to_string(__LINE__));                                        \
+#define AIT_ERROR_CHECK(call)                                        \
+  if ((call) != AITemplateError::AITemplateSuccess) {                \
+    throw std::runtime_error(                                        \
+        std::string(#call " API call failed at ") + __SHORT_FILE__ + \
+        ", line" + std::to_string(__LINE__));                        \
   }
 
 struct AITemplateParamShape {

@@ -12,7 +12,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-from aitemplate.compiler import base, dtype, ops, tensor_accessor, transform
+from aitemplate.compiler import base, dtype, ops, tensor_accessor, transform, workspace
 from aitemplate.compiler.compiler import compile_model
 from aitemplate.compiler.model import AIT_DEFAULT_NUM_RUNTIMES, AITData, Model
 
@@ -28,4 +28,5 @@ __all__ = [
     "Model",
     "AITData",
     "AIT_DEFAULT_NUM_RUNTIMES",
+    "workspace",
 ]

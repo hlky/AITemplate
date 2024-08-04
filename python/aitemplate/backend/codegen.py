@@ -42,8 +42,10 @@ from aitemplate.compiler.dtype import dtype_to_enumerator, get_dtype_size
 from aitemplate.compiler.tensor_accessor import TensorAccessor
 
 from aitemplate.compiler.transform.memory_planning import Workspace
+from aitemplate.compiler.workspace import workspace_mode, WorkspaceAllocationMode
 from aitemplate.utils.debug_settings import AITDebugSettings
 from aitemplate.utils.environ import (
+    allocation_mode,
     multistream_additional_streams,
     multistream_max_mem_parallel_ops,
     multistream_mode,
@@ -950,6 +952,10 @@ class ModelContainerGenerator:
         # are not supported
         target_has_graph_mode = "true" if self.target.name() == "cuda" else "false"
 
+        workspace_allocation_mode = workspace_mode(
+            WorkspaceAllocationMode(allocation_mode())
+        )
+
         run_impl_mode = multistream_mode()
         if run_impl_mode == 0:
             # no multistream mode is used
@@ -1024,6 +1030,7 @@ class ModelContainerGenerator:
             par_function_seq=par_function_seq,
             par_check_function_seq=par_check_function_seq,
             run_impl_mode=run_impl_mode,
+            workspace_allocation_mode=workspace_allocation_mode,
         )
 
     def _create_set_up_constant_offsets(self) -> str:
@@ -1079,6 +1086,10 @@ class ModelContainerGenerator:
 
         model_container_src_fname = f"model_container_base{self.target.src_extension()}"
 
+        workspace_allocation_mode = workspace_mode(
+            WorkspaceAllocationMode(allocation_mode())
+        )
+
         model_container_base_src = MODEL_CONTAINER_TEMPLATE.render(
             num_inputs=self.num_inputs,
             num_outputs=self.num_outputs,
@@ -1101,6 +1112,7 @@ class ModelContainerGenerator:
                 self.set_up_constant_folding_inputs
             ),
             is_windows=is_windows(),
+            workspace_allocation_mode=workspace_allocation_mode,
         )
         result[model_container_src_fname] = model_container_base_src
         return result

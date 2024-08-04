@@ -237,6 +237,16 @@ def multistream_max_mem_parallel_ops() -> int:
     return int(os.getenv("AIT_MULTISTREAM_MAX_MEM_PARALLEL_OPS", "99999999"))
 
 
+def allocation_mode() -> int:
+    """
+    Eager: 0
+    Lazy: 1
+    Free-after-use: 2
+    Default: 0.
+    """
+    return int(os.getenv("AIT_ALLOCATION_MODE", "0"))
+
+
 def is_cmake_compilation() -> bool:
     """
     When enabled, compiles the model via invoking CMake rather than

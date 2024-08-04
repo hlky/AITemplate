@@ -40,6 +40,11 @@ Codegen
 
 **AIT_ENABLE_INCLUDE_FROM_SOURCETREE**: (Only supported by FBCUDA target so far) When this flag is enabled by setting it to "1" (it is disabled by default), the target will create an in-place build which tries to directly reference the include paths within the AITemplate source tree. This helps to iterate faster during native Kernel/Operator development and debugging.
 
+**AIT_ALLOCATION_MODE**: Workspace allocation mode.
+* If set to "0", then Eager mode is used: workspace is allocated immediately and not released until module is unloaded.
+* If set to "1", then Lazy mode is used: workspace is allocated at first run and not released until module is unloaded.
+* If set to "2", then Free After Use mode is used: workspace is allocated each run then freed after use.
+
 Profiling
 ---------
 

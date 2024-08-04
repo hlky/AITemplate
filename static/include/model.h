@@ -58,18 +58,25 @@ class ModelBase {
       size_t num_outputs,
       size_t num_unbound_constants,
       uint8_t* constants,
-      AITemplateAllocator& allocator)
-      : blob_(RAII_DeviceMalloc(blob_size, allocator)),
-        workspace_(RAII_DeviceMalloc(workspace_size, allocator)),
+      AITemplateAllocator& allocator,
+      AITemplateWorkspaceAllocationMode workspace_type =
+          AITemplateWorkspaceAllocationMode::kEager)
+      : blob_size_(blob_size),
+        allocator_(allocator),
         params_(num_inputs + num_outputs + num_unbound_constants),
+        workspace_type_(workspace_type),
         workspace_size_{workspace_size},
         unique_workspace_size_{unique_workspace_size},
         num_inputs_(num_inputs),
         num_outputs_(num_outputs),
         constants_(constants) {
-    global_workspace_ =
-        static_cast<uint8_t*>(workspace_.get()) + unique_workspace_size;
-    unique_workspace_ = static_cast<uint8_t*>(workspace_.get());
+    if (workspace_type_ == AITemplateWorkspaceAllocationMode::kEager) {
+      blob_ = RAII_DeviceMalloc(blob_size_, allocator_);
+      workspace_ = RAII_DeviceMalloc(workspace_size_, allocator_);
+      global_workspace_ =
+          static_cast<uint8_t*>(workspace_.get()) + unique_workspace_size;
+      unique_workspace_ = static_cast<uint8_t*>(workspace_.get());
+    }
     DEVICE_CHECK(GetDevice(&device_idx_))
     DEVICE_CHECK(CreateEvent(&run_finished_));
 #if defined(__NVCC__) || (defined(__clang__) && defined(__CUDA__))
@@ -100,6 +107,23 @@ class ModelBase {
 
   void Run(StreamType stream, bool graph_mode) {
     auto* model = static_cast<ModelType*>(this);
+    if (workspace_type_ == AITemplateWorkspaceAllocationMode::kLazy ||
+        workspace_type_ == AITemplateWorkspaceAllocationMode::kFau) {
+      if (!blob_) {
+        blob_ = RAII_DeviceMalloc(blob_size_, allocator_);
+        model->SetUpWorkspace();
+      }
+      if (!workspace_) {
+        workspace_ = RAII_DeviceMalloc(workspace_size_, allocator_);
+      }
+      if (!global_workspace_) {
+        global_workspace_ =
+            static_cast<uint8_t*>(workspace_.get()) + unique_workspace_size_;
+      }
+      if (!unique_workspace_) {
+        unique_workspace_ = static_cast<uint8_t*>(workspace_.get());
+      }
+    }
     model->SetUpInputsOutputs();
     if (target_has_graph_mode && graph_mode) {
       RunAsGraph(stream);
@@ -108,6 +132,12 @@ class ModelBase {
     }
     model->DeviceToDeviceCopies(stream);
     DEVICE_CHECK(EventRecord(run_finished_, stream));
+    if (workspace_type_ == AITemplateWorkspaceAllocationMode::kFau) {
+      blob_.reset();
+      workspace_.reset();
+      global_workspace_ = nullptr;
+      unique_workspace_ = nullptr;
+    }
   }
 
   void Profile(StreamType stream, size_t iters, const std::string& filename) {
@@ -269,6 +299,8 @@ class ModelBase {
   size_t num_inputs_;
   size_t num_outputs_;
 
+  size_t blob_size_;
+
   // These values are preserved for multi-stream needs.
   size_t workspace_size_;
   size_t unique_workspace_size_;
@@ -277,6 +309,9 @@ class ModelBase {
   GPUPtr workspace_;
   uint8_t* global_workspace_{nullptr};
   uint8_t* unique_workspace_{nullptr};
+
+  AITemplateAllocator& allocator_;
+  AITemplateWorkspaceAllocationMode workspace_type_;
 
   class ParamDim {
    public:

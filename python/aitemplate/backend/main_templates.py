@@ -73,7 +73,9 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
         size_t num_outputs,
         size_t num_unbound_constants,
         uint8_t* constants,
-        AITemplateAllocator& allocator)
+        AITemplateAllocator& allocator,
+        AITemplateWorkspaceAllocationMode workspace_type =
+          AITemplateWorkspaceAllocationMode::kEager)
         : ModelBase(
             blob_size,
             workspace_size,
@@ -82,10 +84,14 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
             num_outputs,
             num_unbound_constants,
             constants,
-            allocator) {
+            allocator,
+            workspace_type) {
     {{ set_up_constants }}
-    auto* blob_ptr = static_cast<uint8_t*>(blob_.get());
-    {{ tensor_slice }}
+
+    if (workspace_type == AITemplateWorkspaceAllocationMode::kEager) {
+      SetUpWorkspace();
+    }
+
     {{ tensor_map_set }}
     {{ set_up_param_dynamic_shapes }}
 
@@ -114,6 +120,11 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
       }
       DEVICE_CHECK(DestroyEvent(sub_event_base));
       {% endif %}
+    }
+
+    void SetUpWorkspace() {
+      auto* blob_ptr = static_cast<uint8_t*>(blob_.get());
+      {{ tensor_slice }}
     }
 
     void SetUpInputsOutputs() {
@@ -304,7 +315,8 @@ class {{model_name}} : public ModelBase<{{model_name}}> {
           {{ num_outputs }},
           {{ num_unbound_constants }},
           constants,
-          allocator
+          allocator,
+          {{workspace_allocation_mode}}
       );
     }
 
