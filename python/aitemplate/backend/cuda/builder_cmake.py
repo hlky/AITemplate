@@ -44,10 +44,10 @@ _DEBUG_SETTINGS = AITDebugSettings()
 
 
 CMAKELISTS_TXT_TEMPLATE = """
-project({{CMAKE_PROJECT}})
-
 # idk which version is actually needed
 cmake_minimum_required(VERSION 3.20)
+
+project({{CMAKE_PROJECT}})
 
 set(SOURCE_FILES
 {{CMAKE_SOURCE_FILES}}
@@ -124,9 +124,9 @@ set_target_properties(standalone PROPERTIES LINKER_LANGUAGE CXX CXX_STANDARD 17)
 
 
 CMAKELISTS_TXT_PROFILER_TEMPLATE = """
-project({{CMAKE_PROJECT}})
-
 cmake_minimum_required(VERSION 3.20)
+
+project({{CMAKE_PROJECT}})
 
 set(SOURCE_FILES
 {{CMAKE_SOURCE_FILES}}
