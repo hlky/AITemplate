@@ -23,6 +23,7 @@ MODEL_TEMPLATE = jinja2.Template(
 {% if debug_header %}
 #include "debug_utility.h"
 {% endif %}
+#include <ait/device.h>
 #include "short_file.h"
 #include "logging.h"
 #include "device_functions-generated.h"

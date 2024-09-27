@@ -2,12 +2,6 @@ from aitemplate.backend import registry
 from aitemplate.backend.backend_spec import ROCMSpec
 from aitemplate.backend.common import pad_common
 
-Header_Files = """
-#include <hip/hip_fp16.h>
-#include <hip/hip_runtime.h>
-#include "library/include/ck/library/utility/host_tensor.hpp"
-"""
-
 
 @registry.reg("rocm.pad.gen_function")
 def gen_function(func_attrs, template_path):
@@ -17,10 +11,8 @@ def gen_function(func_attrs, template_path):
         func_attrs["inputs"][0]._attrs["dtype"]
     )
     return pad_common.SRC_TEMPLATE.render(
-        header_files=Header_Files,
         function_name=func_name,
         index_type=backend_spec.index_type,
-        prefix=backend_spec.prefix,
         elem_input_type=input_type,
         elem_output_type=input_type,
     )

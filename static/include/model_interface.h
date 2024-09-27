@@ -13,6 +13,7 @@
 //  limitations under the License.
 //
 #pragma once
+#include <ait/device.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <array>
@@ -21,7 +22,6 @@
 #include <utility>
 #include <vector>
 #include "short_file.h"
-
 
 // We compile all models with -fvisibility=hidden. Any symbols that need to be
 // exposed in the final shared library must be declared with AIT_EXPORT to make

@@ -94,6 +94,7 @@ class ROCM(Target):
             os.path.join(self._template_path, "external/include/half/"),
             os.path.join(self._template_path, "library/include/"),
             os.path.join(self._template_path, "profiler/include/"),
+            os.path.join(self.static_files_path, "include"),
         ]
         return ck_paths
 
@@ -116,6 +117,7 @@ class ROCM(Target):
 
         ck_paths = self._get_ck_paths()
         options = [
+            "-DAIT_HIP",
             environ.get_compiler_opt_level(),
             "-fPIC",
             "-fvisibility=hidden",

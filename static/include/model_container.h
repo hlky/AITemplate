@@ -13,7 +13,7 @@
 //  limitations under the License.
 //
 #pragma once
-
+#include <ait/device.h>
 #include "constant_folder-generated.h"
 #include "model-generated.h"
 #include "model_interface.h"

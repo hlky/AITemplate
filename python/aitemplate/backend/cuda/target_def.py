@@ -115,9 +115,12 @@ class CUDA(Target):
                 "fmha",
             ),
         ]
-        ait_static_path = os.path.join(self._ait_include_path, "include/kernels")
+        ait_kernels_static_path = os.path.join(
+            self._ait_include_path, "include/kernels"
+        )
+        ait_static_path = os.path.join(self._ait_include_path, "include")
 
-        output = [ait_static_path]
+        output = [ait_kernels_static_path, ait_static_path]
         output.extend(cutlass_path)
         return output
 
@@ -151,6 +154,7 @@ class CUDA(Target):
         if environ.enable_cuda_lto():
             code += [f"lto_{self._arch}"]
         options = [
+            "-DAIT_CUDA",
             "-t=0",
             "-DCUTLASS_ENABLE_TENSOR_CORE_MMA=1",
             "-w",
