@@ -17,6 +17,7 @@
 #include <unordered_map>
 #include "model-generated.h"
 #include "model_container.h"
+#include "raii_wrapper.h"
 #include <string>
 #include <thread>
 
@@ -113,6 +114,14 @@ AITemplateError AITemplateModelContainerDelete(AITemplateModelHandle handle) {
     auto* m = reinterpret_cast<ait::ModelContainer*>(handle);
     delete m;
   });
+}
+
+AITemplateError AITemplateStreamCreate(
+  AITemplateStreamHandle* handle,
+  bool non_blocking) {
+  RETURN_ERROR_IF_NULL(handle)
+  auto stream = ait::RAII_StreamCreate(non_blocking);
+  CONVERT_EXCEPTION_TO_ERROR_CODE({ *handle = reinterpret_cast<AITemplateStreamHandle>(stream.get()); });
 }
 
 AITemplateError AITemplateModelContainerSetConstant(
