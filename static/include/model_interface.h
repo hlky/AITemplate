@@ -164,6 +164,10 @@ AIT_EXPORT AITemplateError AITemplateModelContainerCreate(
 AIT_EXPORT AITemplateError
 AITemplateModelContainerDelete(AITemplateModelHandle handle);
 
+AIT_EXPORT AITemplateError AITemplateStreamCreate(
+  AITemplateStreamHandle* stream_handle,
+  bool non_blocking);
+
 AIT_EXPORT AITemplateError AITemplateModelContainerSetConstant(
     AITemplateModelHandle handle,
     const char* name,

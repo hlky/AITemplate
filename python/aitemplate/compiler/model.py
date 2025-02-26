@@ -802,6 +802,14 @@ class Model:
         # Copy so people can't modify our version of the map
         return self._output_name_to_index.copy()
 
+    def create_stream(self, non_blocking: bool = False):
+        stream_handle = ctypes.c_void_p()
+        self.DLL.AITemplateAllocatorCreate(
+            ctypes.pointer(self.allocator_handle),
+            ctypes.c_bool(non_blocking),
+        )
+        return stream_handle.value
+
     def set_constant(self, name: str, tensor: AITData):
         """
         Set a constant. All constants must have values before calling run().
