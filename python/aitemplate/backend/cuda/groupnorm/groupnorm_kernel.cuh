@@ -342,14 +342,14 @@ __global__ void groupnorm_welford(
       const OutputType* output_ptr = reinterpret_cast<const OutputType*>(local_input);
 #pragma unroll
       for (int j = 0; j < vec_size; ++j) {
-        if (std::is_same<OutputType, half>::value) {
-          WelfordCombine(
+        if constexpr (std::is_same<OutputType, half>::value) {
+          WelfordCombine<ComputeType>(
               __half2float(output_ptr[j]), &thread_mean, &thread_m2, &thread_count);
-        } else if (std::is_same<OutputType, bfloat16>::value) {
-          WelfordCombine(
+        } else if constexpr (std::is_same<OutputType, bfloat16>::value) {
+          WelfordCombine<ComputeType>(
             __bfloat162float(output_ptr[j]), &thread_mean, &thread_m2, &thread_count);
-        } else if (std::is_same<ComputeType, float>::value) {
-          WelfordCombine(
+        } else if constexpr (std::is_same<ComputeType, float>::value) {
+          WelfordCombine<ComputeType>(
             output_ptr[j], &thread_mean, &thread_m2, &thread_count);
         }
       }
@@ -369,19 +369,19 @@ __global__ void groupnorm_welford(
   ComputeType row_inv_var = Rsqrt(row_variance + static_cast<ComputeType>(eps));
 
   float local_row_mean;
-  if (std::is_same<ComputeType, half>::value) {
+  if constexpr (std::is_same<ComputeType, half>::value) {
     local_row_mean = __half2float(row_mean);
-  } else if (std::is_same<ComputeType, bfloat16>::value) {
+  } else if constexpr (std::is_same<ComputeType, bfloat16>::value) {
     local_row_mean = __bfloat162float(row_mean);
-  } else if (std::is_same<ComputeType, float>::value) {
+  } else if constexpr (std::is_same<ComputeType, float>::value) {
     local_row_mean = row_mean;
   }
   float local_row_inv_var;
-  if (std::is_same<ComputeType, half>::value) {
+  if constexpr (std::is_same<ComputeType, half>::value) {
     local_row_inv_var = __half2float(row_inv_var);
-  } else if (std::is_same<ComputeType, bfloat16>::value) {
+  } else if constexpr (std::is_same<ComputeType, bfloat16>::value) {
     local_row_inv_var = __bfloat162float(row_inv_var);
-  } else if (std::is_same<ComputeType, float>::value) {
+  } else if constexpr (std::is_same<ComputeType, float>::value) {
     local_row_inv_var = row_inv_var;
   }
 
@@ -407,21 +407,28 @@ __global__ void groupnorm_welford(
 
 #pragma unroll
       for (int j = 0; j < vec_size; ++j) {
-        if (std::is_same<OutputType, half>::value) {
-        float local_val = __half2float(input_output_ptr[j]);
-        float local_gamma = __half2float(gamma_output_ptr[j]);
-        float local_beta = __half2float(beta_output_ptr[j]);
-        } else if (std::is_same<OutputType, bfloat16>::value) {
-        float local_val = __bfloat162float(input_output_ptr[j]);
-        float local_gamma = __bfloat162float(gamma_output_ptr[j]);
-        float local_beta = __bfloat162float(beta_output_ptr[j]);
+        float local_val;
+        float local_gamma;
+        float local_beta;
+        if constexpr (std::is_same<OutputType, half>::value) {
+        local_val = __half2float(input_output_ptr[j]);
+        local_gamma = __half2float(gamma_output_ptr[j]);
+        local_beta = __half2float(beta_output_ptr[j]);
+        } else if constexpr (std::is_same<OutputType, bfloat16>::value) {
+        local_val = __bfloat162float(input_output_ptr[j]);
+        local_gamma = __bfloat162float(gamma_output_ptr[j]);
+        local_beta = __bfloat162float(beta_output_ptr[j]);
+        } else {
+        local_val = input_output_ptr[j];
+        local_gamma = gamma_output_ptr[j];
+        local_beta = beta_output_ptr[j];
         }
         float out_val = (local_val - local_row_mean) * local_row_inv_var;
         out_val = out_val * local_gamma + local_beta;
         out_val = FuseSwish ? out_val * sigmoid(out_val) : out_val;
-        if (std::is_same<OutputType, half>::value) {
+        if constexpr (std::is_same<OutputType, half>::value) {
           output_output_ptr[j] = __float2half_rn(out_val);
-        } else if (std::is_same<OutputType, bfloat16>::value) {
+        } else if constexpr (std::is_same<OutputType, bfloat16>::value) {
           output_output_ptr[j] = __float2bfloat16_rn(out_val);
         }
         
@@ -688,8 +695,7 @@ cudaError_t invokeWelfordGroupNorm(
     __HANDLE_ONE_VEC(uint4, 8)
     __HANDLE_ONE_VEC(uint2, 4)
     __HANDLE_ONE_VEC(unsigned, 2)
-    __HANDLE_ONE_VEC(half, 1)
-    __HANDLE_ONE_VEC(bfloat16, 1)
+    __HANDLE_ONE_VEC(ElemType, 1)
     default:
       throw std::runtime_error("Invalid max_vec_size\n");
   }
@@ -761,8 +767,7 @@ cudaError_t invokeWelfordGroupNorm(
     __HANDLE_ONE_VEC(uint4, 8)
     __HANDLE_ONE_VEC(uint2, 4)
     __HANDLE_ONE_VEC(unsigned, 2)
-    __HANDLE_ONE_VEC(half, 1)
-    __HANDLE_ONE_VEC(bfloat16, 1)
+    __HANDLE_ONE_VEC(ElemType, 1)
     default:
       throw std::runtime_error("Invalid max_vec_size\n");
   }
