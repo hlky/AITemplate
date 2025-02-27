@@ -305,8 +305,8 @@ __inline__ __device__ void WelfordBlockAllReduce(
   *result_count = count_result_broadcast;
 }
 
-template <typename T, typename ComputeType, bool FuseSwish>
-__global__ void groupnorm_welford_fp16(
+template <typename T, typename ComputeType, bool FuseSwish, typename OutputType>
+__global__ void groupnorm_welford(
     T* output,
     T* input,
     T* gamma,
@@ -319,7 +319,7 @@ __global__ void groupnorm_welford_fp16(
     const int64_t num_rows,
     const int64_t row_stride) {
   // all the numbers and strides are counted with respect to type T
-  constexpr int vec_size = sizeof(T) / sizeof(half);
+  constexpr int vec_size = sizeof(T) / sizeof(OutputType);
 
   const int tid = threadIdx.x;
   const int bid = blockIdx.x;
@@ -339,11 +339,19 @@ __global__ void groupnorm_welford_fp16(
 #pragma unroll
     for (int i = 0; i < elems_per_group_channel; i++) {
       const T* local_input = t_input + i + row_id * row_stride;
-      const half* half_ptr = reinterpret_cast<const half*>(local_input);
+      const OutputType* output_ptr = reinterpret_cast<const OutputType*>(local_input);
 #pragma unroll
       for (int j = 0; j < vec_size; ++j) {
-        WelfordCombine(
-            __half2float(half_ptr[j]), &thread_mean, &thread_m2, &thread_count);
+        if (std::is_same<OutputType, half>::value) {
+          WelfordCombine(
+              __half2float(output_ptr[j]), &thread_mean, &thread_m2, &thread_count);
+        } else if (std::is_same<OutputType, bfloat16>::value) {
+          WelfordCombine(
+            __bfloat162float(output_ptr[j]), &thread_mean, &thread_m2, &thread_count);
+        } else if (std::is_same<ComputeType, float>::value) {
+          WelfordCombine(
+            output_ptr[j], &thread_mean, &thread_m2, &thread_count);
+        }
       }
     }
   }
@@ -363,12 +371,16 @@ __global__ void groupnorm_welford_fp16(
   float local_row_mean;
   if (std::is_same<ComputeType, half>::value) {
     local_row_mean = __half2float(row_mean);
+  } else if (std::is_same<ComputeType, bfloat16>::value) {
+    local_row_mean = __bfloat162float(row_mean);
   } else if (std::is_same<ComputeType, float>::value) {
     local_row_mean = row_mean;
   }
   float local_row_inv_var;
   if (std::is_same<ComputeType, half>::value) {
     local_row_inv_var = __half2float(row_inv_var);
+  } else if (std::is_same<ComputeType, bfloat16>::value) {
+    local_row_inv_var = __bfloat162float(row_inv_var);
   } else if (std::is_same<ComputeType, float>::value) {
     local_row_inv_var = row_inv_var;
   }
@@ -382,26 +394,37 @@ __global__ void groupnorm_welford_fp16(
 #pragma unroll
     for (int i = 0; i < elems_per_group_channel; i++) {
       const T* local_input = t_input + i + row_id * row_stride;
-      const half* input_half_ptr = reinterpret_cast<const half*>(local_input);
+      const OutputType* input_output_ptr = reinterpret_cast<const OutputType*>(local_input);
 
       T* local_output = t_output + i + row_id * row_stride;
       T tmp_output;
-      half* output_half_ptr = reinterpret_cast<half*>(&tmp_output);
+      OutputType* output_output_ptr = reinterpret_cast<OutputType*>(&tmp_output);
 
       const T* local_gamma = t_gamma + i;
       const T* local_beta = t_beta + i;
-      const half* gamma_half_ptr = reinterpret_cast<const half*>(local_gamma);
-      const half* beta_half_ptr = reinterpret_cast<const half*>(local_beta);
+      const OutputType* gamma_output_ptr = reinterpret_cast<const OutputType*>(local_gamma);
+      const OutputType* beta_output_ptr = reinterpret_cast<const OutputType*>(local_beta);
 
 #pragma unroll
       for (int j = 0; j < vec_size; ++j) {
-        float local_val = __half2float(input_half_ptr[j]);
-        float local_gamma = __half2float(gamma_half_ptr[j]);
-        float local_beta = __half2float(beta_half_ptr[j]);
+        if (std::is_same<OutputType, half>::value) {
+        float local_val = __half2float(input_output_ptr[j]);
+        float local_gamma = __half2float(gamma_output_ptr[j]);
+        float local_beta = __half2float(beta_output_ptr[j]);
+        } else if (std::is_same<OutputType, bfloat16>::value) {
+        float local_val = __bfloat162float(input_output_ptr[j]);
+        float local_gamma = __bfloat162float(gamma_output_ptr[j]);
+        float local_beta = __bfloat162float(beta_output_ptr[j]);
+        }
         float out_val = (local_val - local_row_mean) * local_row_inv_var;
         out_val = out_val * local_gamma + local_beta;
         out_val = FuseSwish ? out_val * sigmoid(out_val) : out_val;
-        output_half_ptr[j] = __float2half_rn(out_val);
+        if (std::is_same<OutputType, half>::value) {
+          output_output_ptr[j] = __float2half_rn(out_val);
+        } else if (std::is_same<OutputType, bfloat16>::value) {
+          output_output_ptr[j] = __float2bfloat16_rn(out_val);
+        }
+        
       }
       *local_output = tmp_output;
     }
@@ -603,12 +626,12 @@ __global__ __launch_bounds__(NUM_THREADS) void group_norm_smem(
   }
 }
 
-template <bool FuseSwish, int C, int num_groups>
-cudaError_t invokeWelfordGroupNorm_half(
-    half* output,
-    half* input,
-    half* gamma,
-    half* beta,
+template <bool FuseSwish, int C, int num_groups, typename ElemType>
+cudaError_t invokeWelfordGroupNorm(
+    ElemType* output,
+    ElemType* input,
+    ElemType* gamma,
+    ElemType* beta,
     int N,
     int64_t* height,
     int64_t* width,
@@ -644,7 +667,7 @@ cudaError_t invokeWelfordGroupNorm_half(
 
 #define __HANDLE_ONE_VEC(vec_type, vec_size)           \
   case vec_size: {                                     \
-    groupnorm_welford_fp16<vec_type, float, FuseSwish> \
+    groupnorm_welford<vec_type, float, FuseSwish, ElemType> \
         <<<grid, block_size, 0, stream>>>(             \
             reinterpret_cast<vec_type*>(output),       \
             reinterpret_cast<vec_type*>(input),        \
@@ -666,6 +689,7 @@ cudaError_t invokeWelfordGroupNorm_half(
     __HANDLE_ONE_VEC(uint2, 4)
     __HANDLE_ONE_VEC(unsigned, 2)
     __HANDLE_ONE_VEC(half, 1)
+    __HANDLE_ONE_VEC(bfloat16, 1)
     default:
       throw std::runtime_error("Invalid max_vec_size\n");
   }
@@ -674,12 +698,12 @@ cudaError_t invokeWelfordGroupNorm_half(
   return cudaSuccess;
 }
 
-template <bool FuseSwish, int C, int num_groups>
-cudaError_t invokeWelfordGroupNorm_half(
-    half* output,
-    half* input,
-    half* gamma,
-    half* beta,
+template <bool FuseSwish, int C, int num_groups, typename ElemType>
+cudaError_t invokeWelfordGroupNorm(
+    ElemType* output,
+    ElemType* input,
+    ElemType* gamma,
+    ElemType* beta,
     int N,
     int64_t* depth,
     int64_t* height,
@@ -716,7 +740,7 @@ cudaError_t invokeWelfordGroupNorm_half(
 
 #define __HANDLE_ONE_VEC(vec_type, vec_size)           \
   case vec_size: {                                     \
-    groupnorm_welford_fp16<vec_type, float, FuseSwish> \
+    groupnorm_welford<vec_type, float, FuseSwish, ElemType> \
         <<<grid, block_size, 0, stream>>>(             \
             reinterpret_cast<vec_type*>(output),       \
             reinterpret_cast<vec_type*>(input),        \
@@ -738,6 +762,7 @@ cudaError_t invokeWelfordGroupNorm_half(
     __HANDLE_ONE_VEC(uint2, 4)
     __HANDLE_ONE_VEC(unsigned, 2)
     __HANDLE_ONE_VEC(half, 1)
+    __HANDLE_ONE_VEC(bfloat16, 1)
     default:
       throw std::runtime_error("Invalid max_vec_size\n");
   }

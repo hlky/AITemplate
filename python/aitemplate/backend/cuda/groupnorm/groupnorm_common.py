@@ -91,7 +91,7 @@ namespace {
 
 {{func_signature}}
 {
-    return invokeWelfordGroupNorm_half<{{FuseSwish}}, {{C}}, {{G}}>(
+    return invokeWelfordGroupNorm<{{FuseSwish}}, {{C}}, {{G}}, {{elem_input_type}}>(
             static_cast<{{elem_input_type}}*>(output),
             static_cast<{{elem_input_type}}*>(input),
             static_cast<{{elem_input_type}}*>(gamma),
