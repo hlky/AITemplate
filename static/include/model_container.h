@@ -160,6 +160,8 @@ class ModelContainer : ModelContainerBase {
       size_t num_bound_constants,
       size_t num_unbound_constants,
       size_t params_size,
+      size_t blob_size,
+      size_t workspace_size,
       AITemplateAllocator& allocator);
 
   void Run(
@@ -221,6 +223,8 @@ class ModelContainer : ModelContainerBase {
 
   size_t NumInputs() const;
   size_t NumOutputs() const;
+
+  size_t RequiredMemory() const;
 
   const char* InputName(size_t input_idx) const;
   const char* OutputName(size_t output_idx) const;
@@ -319,6 +323,10 @@ class ModelContainer : ModelContainerBase {
 
   size_t num_inputs_;
   size_t num_outputs_;
+
+  size_t blob_size_;
+  size_t workspace_size_;
+  size_t params_size_;
 
   bool constant_folded_once_ = false;
 };

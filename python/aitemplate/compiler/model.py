@@ -756,6 +756,13 @@ class Model:
             result[name] = i
         return result
 
+    def get_required_memory(self):
+        required_memory = ctypes.c_size_t()
+        self.DLL.AITemplateModelContainerGetRequiredMemory(
+            self.handle, ctypes.byref(required_memory)
+        )
+        return required_memory.value
+
     def _construct_input_name_to_index_map(self) -> Dict[str, int]:
         num_inputs = ctypes.c_size_t()
         self.DLL.AITemplateModelContainerGetNumInputs(

@@ -337,6 +337,15 @@ AITemplateError AITemplateModelContainerGetNumInputs(
   CONVERT_EXCEPTION_TO_ERROR_CODE({ *num_inputs_out = m->NumInputs(); })
 }
 
+AITemplateError AITemplateModelContainerGetRequiredMemory(
+  AITemplateModelHandle handle,
+  size_t* required_memory) {
+RETURN_ERROR_IF_NULL(handle)
+RETURN_ERROR_IF_NULL(required_memory)
+auto* m = reinterpret_cast<ait::ModelContainer*>(handle);
+CONVERT_EXCEPTION_TO_ERROR_CODE({ *required_memory = m->RequiredMemory(); })
+}
+
 AITemplateError AITemplateModelContainerGetInputName(
     AITemplateModelHandle handle,
     size_t input_idx,
