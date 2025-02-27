@@ -1089,11 +1089,18 @@ class ModelContainerGenerator:
         workspace_allocation_mode = workspace_mode(
             WorkspaceAllocationMode(allocation_mode())
         )
-
+        run_impl_mode = multistream_mode()
+        if run_impl_mode == 0:
+            n_additional_streams = 0
+        elif run_impl_mode == 1:
+            n_additional_streams = multistream_additional_streams()
         model_container_base_src = MODEL_CONTAINER_TEMPLATE.render(
             num_inputs=self.num_inputs,
             num_outputs=self.num_outputs,
             param_size=self.max_constant_blob_size + self.extra_owned_constant_size,
+            blob_size=self.max_blob_size,
+            workspace_size=self.workspace.total_size(),
+            n_additional_streams=n_additional_streams,
             set_up_constant_names="\n".join(self.set_up_constant_names),
             set_up_constant_original_names="\n".join(
                 self.set_up_constant_original_names

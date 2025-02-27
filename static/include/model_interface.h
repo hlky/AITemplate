@@ -268,6 +268,10 @@ AIT_EXPORT AITemplateError AITemplateModelContainerGetNumInputs(
     AITemplateModelHandle handle,
     size_t* num_inputs_out);
 
+AIT_EXPORT AITemplateError AITemplateModelContainerGetRequiredMemory(
+    AITemplateModelHandle handle,
+    size_t* required_memory);
+
 AIT_EXPORT AITemplateError AITemplateModelContainerGetInputName(
     AITemplateModelHandle handle,
     size_t input_idx,
