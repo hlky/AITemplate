@@ -1452,6 +1452,10 @@ def function_filter(cfg, func_attrs, ab_alignment):
     tmp = cfg.split("_")
     align_c = int(tmp[-1])
     align_ab = int(tmp[-2])
+    size_a, size_b = tmp[5].split("x")
+    # TODO: investigate
+    if size_a == "256" or size_b == "256":
+        return False
     if align_c != func_attrs["epilogue_alignment"]:
         return False
     if align_ab != ab_alignment:
