@@ -424,6 +424,177 @@ __global__ void pad_kernel_circular_4d_nhwc(
   }
 }
 
+template <typename T, typename IndexType>
+__global__ void pad_kernel_constant_5d_ndhwc(
+    const T* __restrict__ input,
+    T* __restrict__ output,
+    IndexType N,
+    IndexType D,
+    IndexType H,
+    IndexType W,
+    IndexType C,
+    IndexType pad_front,
+    IndexType pad_back,
+    IndexType pad_top,
+    IndexType pad_bottom,
+    IndexType pad_left,
+    IndexType pad_right,
+    T pad_value) {
+  IndexType total_elements = N * (D + pad_front + pad_back) *
+      (H + pad_top + pad_bottom) * (W + pad_left + pad_right) * C;
+  IndexType idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < total_elements) {
+    IndexType c = idx % C;
+    IndexType w = (idx / C) % (W + pad_left + pad_right);
+    IndexType h =
+        (idx / (C * (W + pad_left + pad_right))) % (H + pad_top + pad_bottom);
+    IndexType d =
+        (idx / (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom))) %
+        (D + pad_front + pad_back);
+    IndexType n = idx /
+        (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom) *
+         (D + pad_front + pad_back));
+
+    if (d < pad_front || d >= (D + pad_front) || h < pad_top ||
+        h >= (H + pad_top) || w < pad_left || w >= (W + pad_left)) {
+      output[idx] = pad_value;
+    } else {
+      IndexType in_d = d - pad_front;
+      IndexType in_h = h - pad_top;
+      IndexType in_w = w - pad_left;
+      IndexType in_idx = n * (D * H * W * C) + in_d * (H * W * C) +
+          in_h * (W * C) + in_w * C + c;
+      output[idx] = input[in_idx];
+    }
+  }
+}
+
+template <typename T, typename IndexType>
+__global__ void pad_kernel_reflect_5d_ndhwc(
+    const T* __restrict__ input,
+    T* __restrict__ output,
+    IndexType N,
+    IndexType D,
+    IndexType H,
+    IndexType W,
+    IndexType C,
+    IndexType pad_front,
+    IndexType pad_back,
+    IndexType pad_top,
+    IndexType pad_bottom,
+    IndexType pad_left,
+    IndexType pad_right) {
+  IndexType total_elements = N * (D + pad_front + pad_back) *
+      (H + pad_top + pad_bottom) * (W + pad_left + pad_right) * C;
+  IndexType idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < total_elements) {
+    IndexType c = idx % C;
+    IndexType w = (idx / C) % (W + pad_left + pad_right);
+    IndexType h =
+        (idx / (C * (W + pad_left + pad_right))) % (H + pad_top + pad_bottom);
+    IndexType d =
+        (idx / (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom))) %
+        (D + pad_front + pad_back);
+    IndexType n = idx /
+        (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom) *
+         (D + pad_front + pad_back));
+
+    IndexType in_d = (d < pad_front)
+        ? (pad_front - d)
+        : (d >= (D + pad_front) ? 2 * D + pad_front - d - 2 : d - pad_front);
+    IndexType in_h = (h < pad_top)
+        ? (pad_top - h)
+        : (h >= (H + pad_top) ? 2 * H + pad_top - h - 2 : h - pad_top);
+    IndexType in_w = (w < pad_left)
+        ? (pad_left - w)
+        : (w >= (W + pad_left) ? 2 * W + pad_left - w - 2 : w - pad_left);
+
+    IndexType in_idx = n * (D * H * W * C) + in_d * (H * W * C) +
+        in_h * (W * C) + in_w * C + c;
+    output[idx] = input[in_idx];
+  }
+}
+
+template <typename T, typename IndexType>
+__global__ void pad_kernel_replicate_5d_ndhwc(
+    const T* __restrict__ input,
+    T* __restrict__ output,
+    IndexType N,
+    IndexType D,
+    IndexType H,
+    IndexType W,
+    IndexType C,
+    IndexType pad_front,
+    IndexType pad_back,
+    IndexType pad_top,
+    IndexType pad_bottom,
+    IndexType pad_left,
+    IndexType pad_right) {
+  IndexType total_elements = N * (D + pad_front + pad_back) *
+      (H + pad_top + pad_bottom) * (W + pad_left + pad_right) * C;
+  IndexType idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < total_elements) {
+    IndexType c = idx % C;
+    IndexType w = (idx / C) % (W + pad_left + pad_right);
+    IndexType h =
+        (idx / (C * (W + pad_left + pad_right))) % (H + pad_top + pad_bottom);
+    IndexType d =
+        (idx / (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom))) %
+        (D + pad_front + pad_back);
+    IndexType n = idx /
+        (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom) *
+         (D + pad_front + pad_back));
+
+    IndexType in_d = min(max(d - pad_front, (IndexType)0), D - 1);
+    IndexType in_h = min(max(h - pad_top, (IndexType)0), H - 1);
+    IndexType in_w = min(max(w - pad_left, (IndexType)0), W - 1);
+
+    IndexType in_idx = n * (D * H * W * C) + in_d * (H * W * C) +
+        in_h * (W * C) + in_w * C + c;
+    output[idx] = input[in_idx];
+  }
+}
+
+template <typename T, typename IndexType>
+__global__ void pad_kernel_circular_5d_ndhwc(
+    const T* __restrict__ input,
+    T* __restrict__ output,
+    IndexType N,
+    IndexType D,
+    IndexType H,
+    IndexType W,
+    IndexType C,
+    IndexType pad_front,
+    IndexType pad_back,
+    IndexType pad_top,
+    IndexType pad_bottom,
+    IndexType pad_left,
+    IndexType pad_right) {
+  IndexType total_elements = N * (D + pad_front + pad_back) *
+      (H + pad_top + pad_bottom) * (W + pad_left + pad_right) * C;
+  IndexType idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < total_elements) {
+    IndexType c = idx % C;
+    IndexType w = (idx / C) % (W + pad_left + pad_right);
+    IndexType h =
+        (idx / (C * (W + pad_left + pad_right))) % (H + pad_top + pad_bottom);
+    IndexType d =
+        (idx / (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom))) %
+        (D + pad_front + pad_back);
+    IndexType n = idx /
+        (C * (W + pad_left + pad_right) * (H + pad_top + pad_bottom) *
+         (D + pad_front + pad_back));
+
+    IndexType in_d = (d - pad_front + D) % D;
+    IndexType in_h = (h - pad_top + H) % H;
+    IndexType in_w = (w - pad_left + W) % W;
+
+    IndexType in_idx = n * (D * H * W * C) + in_d * (H * W * C) +
+        in_h * (W * C) + in_w * C + c;
+    output[idx] = input[in_idx];
+  }
+}
+
 } // namespace ait
 
 template <typename IndexType, typename ElemInputType, typename ElemOutputType>
@@ -634,6 +805,88 @@ void InvokePad(
           H,
           W,
           C,
+          pad_top,
+          pad_bottom,
+          pad_left,
+          pad_right);
+    }
+  } else if (rank == 5) {
+    IndexType total_elements = N * (D + pad_front + pad_back) *
+        (H + pad_top + pad_bottom) * (W + pad_left + pad_right) * C;
+    num_blocks = (total_elements + threads_per_block - 1) / threads_per_block;
+    if (strcmp(mode, "constant") == 0) {
+      ait::pad_kernel_constant_5d_ndhwc<<<
+          num_blocks,
+          threads_per_block,
+          0,
+          stream>>>(
+          static_cast<const ElemInputType*>(in_ptr),
+          static_cast<ElemOutputType*>(out_ptr),
+          N,
+          D,
+          H,
+          W,
+          C,
+          pad_front,
+          pad_back,
+          pad_top,
+          pad_bottom,
+          pad_left,
+          pad_right,
+          pad_value);
+    } else if (strcmp(mode, "reflect") == 0) {
+      ait::pad_kernel_reflect_5d_ndhwc<<<
+          num_blocks,
+          threads_per_block,
+          0,
+          stream>>>(
+          static_cast<const ElemInputType*>(in_ptr),
+          static_cast<ElemOutputType*>(out_ptr),
+          N,
+          D,
+          H,
+          W,
+          C,
+          pad_front,
+          pad_back,
+          pad_top,
+          pad_bottom,
+          pad_left,
+          pad_right);
+    } else if (strcmp(mode, "replicate") == 0) {
+      ait::pad_kernel_replicate_5d_ndhwc<<<
+          num_blocks,
+          threads_per_block,
+          0,
+          stream>>>(
+          static_cast<const ElemInputType*>(in_ptr),
+          static_cast<ElemOutputType*>(out_ptr),
+          N,
+          D,
+          H,
+          W,
+          C,
+          pad_front,
+          pad_back,
+          pad_top,
+          pad_bottom,
+          pad_left,
+          pad_right);
+    } else if (strcmp(mode, "circular") == 0) {
+      ait::pad_kernel_circular_5d_ndhwc<<<
+          num_blocks,
+          threads_per_block,
+          0,
+          stream>>>(
+          static_cast<const ElemInputType*>(in_ptr),
+          static_cast<ElemOutputType*>(out_ptr),
+          N,
+          D,
+          H,
+          W,
+          C,
+          pad_front,
+          pad_back,
           pad_top,
           pad_bottom,
           pad_left,

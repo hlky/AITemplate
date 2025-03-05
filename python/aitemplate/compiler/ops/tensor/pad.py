@@ -35,6 +35,8 @@ class pad(Operator):
             output_shape = [x[0], x[1] + pad[2] + pad[3], x[2] + pad[0] + pad[1]]
         elif rank == 4:
             output_shape = [x[0], x[1] + pad[2] + pad[3], x[2] + pad[0] + pad[1], x[3]]
+        elif rank == 5:
+            output_shape = [x[0], x[1] + pad[4] + pad[5], x[2] + pad[2] + pad[3], x[3] + pad[0] + pad[1], x[4]]
         else:
             raise NotImplementedError(f"unsupported rank {rank}")
         return output_shape
@@ -50,6 +52,8 @@ class pad(Operator):
                 repeat = 4
             if rank == 4:
                 repeat = 4
+            if rank == 5:
+                repeat = 5
             self._attrs["pad"] = (self._attrs["pad"],) * repeat
         if rank == 4 and len(self._attrs["pad"]) > 4:
             raise NotImplementedError("padding channels of 4D tensor not implemented")
