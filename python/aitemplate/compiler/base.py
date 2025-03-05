@@ -995,6 +995,46 @@ class Tensor(Node):
     def __neg__(self) -> Tensor:
         return OP_REGISTRY.get("MUL")(-1, self)
 
+    def __getitem__(self, key):
+        from aitemplate.compiler import ops
+        rank = self._rank()
+
+        if not isinstance(key, tuple):
+            key = (key,)
+
+        new_key = []
+        ellipsis_found = False
+        for item in key:
+            if item is Ellipsis:
+                if ellipsis_found:
+                    raise IndexError("Only a single ellipsis is allowed in indexing")
+                ellipsis_found = True
+                num_missing = rank - (len(key) - 1)
+                new_key.extend([slice(None)] * num_missing)
+            else:
+                new_key.append(item)
+        if len(new_key) < rank:
+            new_key.extend([slice(None)] * (rank - len(new_key)))
+        if len(new_key) > rank:
+            raise IndexError("Too many indices for tensor")
+
+        start_indices = []
+        end_indices = []
+        for idx in new_key:
+            if isinstance(idx, int):
+                start_indices.append(idx)
+                end_indices.append(idx + 1)
+            elif isinstance(idx, slice):
+                if idx.step not in (None, 1):
+                    raise ValueError("Slicing with a step other than 1 is not supported")
+                start_indices.append(idx.start if idx.start is not None else 0)
+                end_indices.append(idx.stop)
+            else:
+                raise IndexError(f"Unsupported index type: {type(idx)}")
+
+        # TODO: check if copy.deepcopy is required
+        return ops.dynamic_slice()(copy.deepcopy(self), start_indices=start_indices, end_indices=end_indices)
+
 
 def _create_host_zero_tensor(
     shape: List[Union[int, IntVar]],
