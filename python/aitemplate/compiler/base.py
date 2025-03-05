@@ -373,6 +373,42 @@ class IntImm(IntVar):
             and self._attrs["values"] == another._attrs["values"]
         )
 
+    def __lt__(self, another: Union[int, IntVar]) -> bool:
+        if isinstance(another, int):
+            return self.value() == another
+
+        return (
+            isinstance(another, IntImm)
+            and self._attrs["values"] < another._attrs["values"]
+        )
+
+    def __le__(self, another: Union[int, IntVar]) -> bool:
+        if isinstance(another, int):
+            return self.value() == another
+
+        return (
+            isinstance(another, IntImm)
+            and self._attrs["values"] <= another._attrs["values"]
+        )
+
+    def __gt__(self, another: Union[int, IntVar]) -> bool:
+        if isinstance(another, int):
+            return self.value() == another
+
+        return (
+            isinstance(another, IntImm)
+            and self._attrs["values"] > another._attrs["values"]
+        )
+
+    def __ge__(self, another: Union[int, IntVar]) -> bool:
+        if isinstance(another, int):
+            return self.value() == another
+
+        return (
+            isinstance(another, IntImm)
+            and self._attrs["values"] >= another._attrs["values"]
+        )
+
     def __hash__(self) -> int:
         return super().__hash__()
 
