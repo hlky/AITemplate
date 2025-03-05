@@ -33,3 +33,6 @@ class repeat_interleave(Operator):
         func_key = f"{target.name()}.{self._attrs['op']}.gen_function"
         func = registry.get(func_key)
         return func(self._attrs)
+
+    def _get_op_attributes(self):
+        return {"repeats": self._attrs["repeats"], "repeat_dim": self._attrs["repeat_dim"]}
