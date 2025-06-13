@@ -1,3 +1,5 @@
+# Deprecated: Use [HoneyML](https://github.com/hlky/honeyml)
+
 # hlky's AITemplate (HAIT)
 
 HAIT continues development from [facebookincubator/AITemplate](https://github.com/facebookincubator/AITemplate).
